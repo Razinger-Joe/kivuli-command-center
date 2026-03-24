@@ -27,7 +27,7 @@ export const AttackChart = () => {
         <Tooltip 
           contentStyle={{ 
             backgroundColor: 'rgba(0,0,0,0.9)', 
-            border: '1px solid rgba(0,255,157,0.3)',
+            border: '1px solid #00ff9d',
             borderRadius: '8px',
             color: '#fff'
           }}
@@ -35,9 +35,9 @@ export const AttackChart = () => {
         <Line 
           type="monotone" 
           dataKey="attacks" 
-          stroke="hsl(var(--cyber-green))" 
+          stroke="#00ff9d" 
           strokeWidth={2}
-          dot={{ fill: 'hsl(var(--cyber-green))', r: 4 }}
+          dot={{ fill: '#00ff9d', r: 4 }}
         />
       </LineChart>
     </ResponsiveContainer>

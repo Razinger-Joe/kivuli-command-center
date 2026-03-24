@@ -1,46 +1,51 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, Download, Eye, Shield } from "lucide-react";
-
-const forensicsData = [
-  {
-    timestamp: "2025-11-26 14:23:45",
-    trap: "Budget_2025.pdf",
-    ip: "197.156.240.12",
-    userAgent: "Mozilla/5.0 (Windows NT 10.0)",
-    dwellTime: "45s",
-    status: "Active"
-  },
-  {
-    timestamp: "2025-11-26 13:15:22",
-    trap: "Staff_Salaries.xlsx",
-    ip: "41.90.123.45",
-    userAgent: "Chrome/119.0.0.0",
-    dwellTime: "2m 15s",
-    status: "Neutralized"
-  },
-  {
-    timestamp: "2025-11-26 11:42:10",
-    trap: "Intelligence_Report_Q4.docx",
-    ip: "105.163.2.78",
-    userAgent: "Firefox/120.0",
-    dwellTime: "1m 30s",
-    status: "Active"
-  },
-  {
-    timestamp: "2025-11-25 16:55:33",
-    trap: "Strategic_Plan_2026.pdf",
-    ip: "197.232.15.90",
-    userAgent: "Edge/119.0.0.0",
-    dwellTime: "3m 12s",
-    status: "Neutralized"
-  },
-];
+import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { forensicsData, ForensicsIncident } from "@/data/forensicsData";
 
 const Forensics = () => {
+  const { toast } = useToast();
+  const [data, setData] = useState<ForensicsIncident[]>(forensicsData);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedItem, setSelectedItem] = useState<ForensicsIncident | null>(null);
+
+  const filteredData = data.filter(item => 
+    item.ip.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.trap.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.userAgent.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleExportCSV = () => {
+    const headers = "Timestamp,Triggered Trap,Attacker IP,User Agent,Dwell Time,Status\n";
+    const csvData = filteredData.map(item => 
+      `${item.timestamp},${item.trap},${item.ip},"${item.userAgent}",${item.dwellTime},${item.status}`
+    ).join("\n");
+    const blob = new Blob([headers + csvData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'kivuli-forensics-export.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleNeutralize = (itemToNeutralize: any) => {
+    setData(prev => prev.map(item => 
+      item === itemToNeutralize ? { ...item, status: "Neutralized" } : item
+    ));
+    toast({
+      title: `Threat neutralized: ${itemToNeutralize.ip}`,
+    });
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -48,7 +53,7 @@ const Forensics = () => {
           <h1 className="text-3xl font-bold text-cyber-green mb-2">Forensics Reports</h1>
           <p className="text-muted-foreground">Intrusion activity analysis and threat intelligence</p>
         </div>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" className="gap-2" onClick={handleExportCSV}>
           <Download className="w-4 h-4" />
           Export CSV
         </Button>
@@ -61,9 +66,11 @@ const Forensics = () => {
             <Input
               placeholder="Search by IP, trap name, or user agent..."
               className="pl-10 bg-black/50 border-white/10 focus:border-cyber-green"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <Button variant="outline">Filter</Button>
+          <Button variant="outline" onClick={() => setSearchQuery("")}>Filter</Button>
         </div>
 
         <div className="rounded-lg border border-white/10 overflow-hidden">
@@ -80,47 +87,94 @@ const Forensics = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {forensicsData.map((item, i) => (
-                <TableRow 
-                  key={i}
-                  className="border-white/5 hover:bg-cyber-green/10 transition-colors"
-                >
-                  <TableCell className="font-mono text-xs">{item.timestamp}</TableCell>
-                  <TableCell className="font-medium">{item.trap}</TableCell>
-                  <TableCell className="font-mono">{item.ip}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground truncate max-w-xs">
-                    {item.userAgent}
-                  </TableCell>
-                  <TableCell>{item.dwellTime}</TableCell>
-                  <TableCell>
-                    <Badge 
-                      className={
-                        item.status === "Active"
-                          ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
-                          : "bg-green-500/20 text-green-400 border-green-500/30"
-                      }
-                    >
-                      {item.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="h-8">
-                        <Eye className="w-3 h-3" />
-                      </Button>
-                      {item.status === "Active" && (
-                        <Button size="sm" variant="destructive" className="h-8">
-                          <Shield className="w-3 h-3" />
-                        </Button>
-                      )}
-                    </div>
+              {filteredData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No results found
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredData.map((item) => (
+                  <TableRow 
+                    key={item.id}
+                    className="border-white/5 hover:bg-cyber-green/10 transition-colors"
+                  >
+                    <TableCell className="font-mono text-xs">{item.timestamp}</TableCell>
+                    <TableCell className="font-medium">{item.trap}</TableCell>
+                    <TableCell className="font-mono">{item.ip}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground truncate max-w-xs">
+                      {item.userAgent}
+                    </TableCell>
+                    <TableCell>{item.dwellTime}</TableCell>
+                    <TableCell>
+                      <Badge 
+                        className={
+                          item.status === "Active"
+                            ? "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                            : "bg-green-500/20 text-green-400 border-green-500/30"
+                        }
+                      >
+                        {item.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="h-8" onClick={() => setSelectedItem(item)}>
+                          <Eye className="w-3 h-3" />
+                        </Button>
+                        {item.status === "Active" && (
+                          <Button size="sm" variant="destructive" className="h-8" onClick={() => handleNeutralize(item)}>
+                            <Shield className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
       </Card>
+
+      <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
+        <DialogContent className="bg-black border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-cyber-green">Incident Details</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Full intelligence report for this event.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedItem && (
+            <div className="space-y-4 font-mono text-sm mt-4">
+              <div className="grid grid-cols-3 gap-2 border-b border-white/10 pb-2">
+                <span className="text-muted-foreground">Timestamp:</span>
+                <span className="col-span-2">{selectedItem.timestamp}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-white/10 pb-2">
+                <span className="text-muted-foreground">Trap:</span>
+                <span className="col-span-2">{selectedItem.trap}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-white/10 pb-2">
+                <span className="text-muted-foreground">Attacker IP:</span>
+                <span className="col-span-2">{selectedItem.ip}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-white/10 pb-2">
+                <span className="text-muted-foreground">User Agent:</span>
+                <span className="col-span-2 truncate">{selectedItem.userAgent}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-white/10 pb-2">
+                <span className="text-muted-foreground">Dwell Time:</span>
+                <span className="col-span-2">{selectedItem.dwellTime}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-white/10 pb-2">
+                <span className="text-muted-foreground">Status:</span>
+                <span className="col-span-2">{selectedItem.status}</span>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

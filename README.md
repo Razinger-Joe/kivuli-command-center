@@ -1,74 +1,73 @@
-# Kivuli Command Center
+# Welcome to your Lovable project
 
-**Kivuli Command Center** is a state-of-the-art cybersecurity dashboard designed for real-time threat monitoring and defense coordination, with a specific focus on the Kenyan region. "Kivuli" (Swahili for "Shadow") represents our covert capability to track intruders and deploy shadow assets like decoys and sinkholes.
+## Project info
 
-![Dashboard Preview](public/placeholder.svg)
+**URL**: https://lovable.dev/projects/3940f0a0-9a42-4a56-bcf7-1b875491f991
 
-## Features
+## How can I edit this code?
 
-- **Real-Time Threat Monitoring**: Live tracking of intrusions, neutralized threats, and active monitoring zones.
-- **Kenya Threat Map**: Geospatial visualization of cyber threats across Kenya.
-- **Activity Feed**: Live log of system events, including decoy deployments and intrusion attempts.
-- **Forensics & Sinkholes**: Tools for analyzing attack vectors and managing defensive sinkholes.
-- **Factory**: [Details to be added based on analysis]
-- **Responsive Design**: Built with a "Glassmorphism" aesthetic for a modern, high-tech command center feel.
+There are several ways of editing your application.
 
-## Technology Stack
+**Use Lovable**
 
-- **Frontend Framework**: React 18 with Vite
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS, Shadcn UI, Lucide Icons
-- **Charts**: Recharts
-- **State Management**: React Query (Tanstack Query)
-- **Routing**: React Router DOM
+Simply visit the [Lovable Project](https://lovable.dev/projects/3940f0a0-9a42-4a56-bcf7-1b875491f991) and start prompting.
 
-## Getting Started
+Changes made via Lovable will be committed automatically to this repo.
 
-### Prerequisites
+**Use your preferred IDE**
 
-- Node.js (v18 or higher)
-- npm or bun
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-### Installation
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-1.  Clone the repository:
-    ```bash
-    git clone https://github.com/your-org/kivuli-command-center.git
-    cd kivuli-command-center
-    ```
+Follow these steps:
 
-2.  Install dependencies:
-    ```bash
-    npm install
-    # or
-    bun install
-    ```
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
 
-3.  Start the development server:
-    ```bash
-    npm run dev
-    ```
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
 
-4.  Build for production:
-    ```bash
-    npm run build
-    ```
+# Step 3: Install the necessary dependencies.
+npm i
 
-## Project Structure
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
+```
 
-- `src/pages`: Main application views (Dashboard, Forensics, etc.)
-- `src/components`: Reusable UI components and widgets (AttackChart, KenyaMap, etc.)
-- `src/lib`: Utility functions and configuration.
-- `src/hooks`: Custom React hooks.
+**Edit a file directly in GitHub**
 
-## Contributing
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4.  Push to the Branch (`git push origin feature/AmazingFeature`)
-5.  Open a Pull Request
+**Use GitHub Codespaces**
 
-## License
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-Distributed under the MIT License. See `LICENSE` for more information.
+## What technologies are used for this project?
+
+This project is built with:
+
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
+
+## How can I deploy this project?
+
+Simply open [Lovable](https://lovable.dev/projects/3940f0a0-9a42-4a56-bcf7-1b875491f991) and click on Share -> Publish.
+
+## Can I connect a custom domain to my Lovable project?
+
+Yes, you can!
+
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)

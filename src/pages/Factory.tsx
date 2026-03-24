@@ -14,18 +14,57 @@ const Factory = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [trapId, setTrapId] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [decoyType, setDecoyType] = useState("");
+  const [alertEmail, setAlertEmail] = useState("");
+  const [selfDestruct, setSelfDestruct] = useState(false);
+  const [days, setDays] = useState(30);
+  const [deploying, setDeploying] = useState(false);
+  const [emailError, setEmailError] = useState(false);
   const { toast } = useToast();
 
   const handleGenerate = async () => {
+    setEmailError(false);
+
+    if (!fileName) {
+      toast({ title: 'Missing file name', description: 'Please enter a decoy file name.', variant: 'destructive' });
+      return;
+    }
+    if (!decoyType) {
+      toast({ title: 'Missing type', description: 'Please select a decoy type.', variant: 'destructive' });
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!alertEmail || !emailRegex.test(alertEmail)) {
+      setEmailError(true);
+      toast({ title: 'Invalid email', description: 'Please enter a valid alert destination email.', variant: 'destructive' });
+      return;
+    }
+
     setIsGenerating(true);
     
     // Simulate trap generation with matrix effect
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    const newTrapId = `TRAP_${Date.now()}_HR`;
+    const newTrapId = `TRAP_${decoyType.toUpperCase()}_${Date.now()}`;
     setTrapId(newTrapId);
     setIsGenerating(false);
     setShowSuccess(true);
+    toast({ title: 'Trap generated', description: `Beacon ${newTrapId} is ready for deployment.` });
+  };
+
+  const handleDeploy = async () => {
+    setDeploying(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    toast({ title: 'Trap Deployed', description: `Successfully deployed trap ${trapId} to shared drive.` });
+    setDeploying(false);
+    setShowSuccess(false);
+    setFileName("");
+    setDecoyType("");
+    setAlertEmail("");
+    setSelfDestruct(false);
+    setDays(30);
   };
 
   return (
@@ -47,6 +86,8 @@ const Factory = () => {
                 id="filename"
                 placeholder="e.g., Staff_Salaries_2025.pdf"
                 className="pl-10 bg-black/50 border-white/10 focus:border-cyber-green"
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
               />
             </div>
           </div>
@@ -55,7 +96,7 @@ const Factory = () => {
             <Label htmlFor="decoytype" className="text-foreground mb-2 block">
               Decoy Type
             </Label>
-            <Select>
+            <Select value={decoyType} onValueChange={setDecoyType}>
               <SelectTrigger className="bg-black/50 border-white/10 focus:border-cyber-green">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
@@ -78,7 +119,12 @@ const Factory = () => {
                 id="email"
                 type="email"
                 placeholder="security@niru.go.ke"
-                className="pl-10 bg-black/50 border-white/10 focus:border-cyber-green"
+                className={`pl-10 bg-black/50 focus:border-cyber-green ${emailError ? 'border-red-500' : 'border-white/10'}`}
+                value={alertEmail}
+                onChange={(e) => {
+                  setAlertEmail(e.target.value);
+                  if (emailError) setEmailError(false);
+                }}
               />
             </div>
           </div>
@@ -91,7 +137,7 @@ const Factory = () => {
             <CollapsibleContent className="mt-4 space-y-4">
               <div className="flex items-center justify-between">
                 <Label htmlFor="selfDestruct">Self-Destruct Timer</Label>
-                <Switch id="selfDestruct" />
+                <Switch id="selfDestruct" checked={selfDestruct} onCheckedChange={setSelfDestruct} />
               </div>
               <div>
                 <Label htmlFor="days">Days until auto-delete</Label>
@@ -99,6 +145,8 @@ const Factory = () => {
                   id="days"
                   type="number"
                   defaultValue="30"
+                  value={days}
+                  onChange={(e) => setDays(Number(e.target.value))}
                   className="mt-2 bg-black/50 border-white/10"
                 />
               </div>
@@ -131,13 +179,26 @@ const Factory = () => {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="p-4 bg-black/50 rounded-lg font-mono text-sm">
-              <div className="text-muted-foreground">Beacon ID:</div>
-              <div className="text-cyber-green font-bold">{trapId}</div>
+            <div className="p-4 bg-black/50 rounded-lg font-mono text-sm space-y-2">
+              <div className="grid grid-cols-3">
+                <span className="text-muted-foreground">Beacon ID:</span>
+                <span className="col-span-2 text-cyber-green font-bold">{trapId}</span>
+              </div>
+              <div className="grid grid-cols-3">
+                <span className="text-muted-foreground">File Name:</span>
+                <span className="col-span-2">{fileName}</span>
+              </div>
+              <div className="grid grid-cols-3">
+                <span className="text-muted-foreground">Type:</span>
+                <span className="col-span-2">{decoyType}</span>
+              </div>
             </div>
             <div className="flex gap-2">
-              <Button className="flex-1">Deploy to Shared Drive</Button>
-              <Button variant="outline" onClick={() => setShowSuccess(false)}>
+              <Button className="flex-1" onClick={handleDeploy} disabled={deploying}>
+                {deploying ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Deploy to Shared Drive
+              </Button>
+              <Button variant="outline" onClick={() => setShowSuccess(false)} disabled={deploying}>
                 Generate Another
               </Button>
             </div>

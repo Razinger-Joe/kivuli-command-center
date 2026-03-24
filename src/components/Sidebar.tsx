@@ -15,9 +15,9 @@ const navItems = [
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
-export const Sidebar = () => {
+export const Sidebar = ({ className }: { className?: string }) => {
   return (
-    <aside className="w-60 bg-[#0a0a0a] border-r border-white/10 flex flex-col">
+    <aside className={`w-60 bg-[#0a0a0a] border-r border-white/10 flex flex-col ${className || ''}`}>
       <div className="p-6 border-b border-white/10">
         <div className="flex items-center gap-3">
           <div className="w-2 h-8 bg-kenyan-gold rounded-full" />

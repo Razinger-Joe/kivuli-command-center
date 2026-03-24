@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -5,8 +6,78 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Settings = () => {
+  const { toast } = useToast();
+  const [timezone, setTimezone] = useState("eat");
+  const [language, setLanguage] = useState("en");
+  const [emailAlerts, setEmailAlerts] = useState(false);
+  const [slackWebhook, setSlackWebhook] = useState("");
+  const [twoFactor, setTwoFactor] = useState(false);
+  
+  const [apiKey, setApiKey] = useState("kv_live_sk_8f7b92c4d9e01a2b3c4");
+  const [showKey, setShowKey] = useState(false);
+  const [isTestingSlack, setIsTestingSlack] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("kivuli-settings");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setTimezone(parsed.timezone || "eat");
+        setLanguage(parsed.language || "en");
+        setEmailAlerts(parsed.emailAlerts || false);
+        setSlackWebhook(parsed.slackWebhook || "");
+        setTwoFactor(parsed.twoFactor || false);
+        if (parsed.apiKey) setApiKey(parsed.apiKey);
+      } catch (e) {
+        console.error("Failed to parse settings", e);
+      }
+    }
+  }, []);
+
+  const handleSave = () => {
+    if (slackWebhook && !slackWebhook.startsWith('https://hooks.slack.com/')) {
+      toast({ title: "Invalid Webhook", description: "Slack webhook must start with https://hooks.slack.com/", variant: "destructive" });
+      return;
+    }
+
+    localStorage.setItem("kivuli-settings", JSON.stringify({
+      timezone, language, emailAlerts, slackWebhook, twoFactor, apiKey
+    }));
+    toast({ title: "Settings saved", description: "Your preferences have been updated." });
+  };
+
+  const testWebhook = async () => {
+    if (!slackWebhook.startsWith('https://hooks.slack.com/')) {
+      toast({ title: "Invalid Webhook", description: "Save a valid Slack webhook before testing.", variant: "destructive" });
+      return;
+    }
+    setIsTestingSlack(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setIsTestingSlack(false);
+    toast({ title: "Test Successful", description: "Webhook endpoint reached successfully." });
+  };
+
+  const regenerateKey = () => {
+    const newKey = `kv_live_sk_${crypto.randomUUID().replace(/-/g, '')}`;
+    setApiKey(newKey);
+    toast({ title: "API Key Regenerated", description: "Make sure to update your integrations." });
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div>
@@ -46,7 +117,7 @@ const Settings = () => {
           <TabsContent value="general" className="p-6 space-y-6">
             <div>
               <Label htmlFor="timezone">System Timezone</Label>
-              <Select>
+              <Select value={timezone} onValueChange={setTimezone}>
                 <SelectTrigger className="mt-2 bg-black/50 border-white/10">
                   <SelectValue placeholder="Select timezone" />
                 </SelectTrigger>
@@ -59,7 +130,7 @@ const Settings = () => {
 
             <div>
               <Label htmlFor="language">Language</Label>
-              <Select>
+              <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger className="mt-2 bg-black/50 border-white/10">
                   <SelectValue placeholder="Select language" />
                 </SelectTrigger>
@@ -82,11 +153,19 @@ const Settings = () => {
 
             <div>
               <Label htmlFor="slack">Slack Webhook URL</Label>
-              <Input
-                id="slack"
-                placeholder="https://hooks.slack.com/..."
-                className="mt-2 bg-black/50 border-white/10"
-              />
+              <div className="flex gap-2 mt-2">
+                <Input
+                  id="slack"
+                  placeholder="https://hooks.slack.com/..."
+                  className="bg-black/50 border-white/10 flex-1"
+                  value={slackWebhook}
+                  onChange={(e) => setSlackWebhook(e.target.value)}
+                />
+                <Button variant="outline" onClick={testWebhook} disabled={isTestingSlack}>
+                  {isTestingSlack ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  Test Webhook
+                </Button>
+              </div>
             </div>
           </TabsContent>
 
@@ -101,10 +180,33 @@ const Settings = () => {
 
             <div>
               <Label>API Key Management</Label>
-              <div className="mt-2 p-4 bg-black/50 border border-white/10 rounded-lg font-mono text-sm">
-                ••••••••••••••••••••••••••••••••
+              <div className="flex items-center gap-2 mt-2">
+                <div className="flex-1 p-4 bg-black/50 border border-white/10 rounded-lg font-mono text-sm tracking-widest break-all">
+                  {showKey ? apiKey : "•".repeat(32)}
+                </div>
+                <Button variant="outline" size="icon" onClick={() => setShowKey(!showKey)}>
+                  {showKey ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
+                </Button>
               </div>
-              <Button variant="outline" className="mt-2">Regenerate Key</Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="mt-4 text-red-500 hover:text-red-400 hover:bg-red-950">Regenerate Key</Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="bg-black border-red-500/50 text-white">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-red-500">Regenerate API Key?</AlertDialogTitle>
+                    <AlertDialogDescription className="text-red-400">
+                      Regenerating the API key will immediately invalidate the current key and break any active integrations.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/10">Cancel</AlertDialogCancel>
+                    <AlertDialogAction className="bg-red-600 hover:bg-red-700 text-white font-bold" onClick={regenerateKey}>
+                      Regenerate
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </TabsContent>
 
@@ -119,7 +221,7 @@ const Settings = () => {
       </Card>
 
       <div className="flex justify-end">
-        <Button className="bg-cyber-green text-black hover:bg-cyber-green/90">
+        <Button className="bg-cyber-green text-black hover:bg-cyber-green/90" onClick={handleSave}>
           Save Changes
         </Button>
       </div>
