@@ -87,7 +87,7 @@ const Dashboard = () => {
               <AlertTriangle className="w-6 h-6 text-amber-400" />
             </div>
           </div>
-          {!isLoading && <p className="text-xs text-muted-foreground mt-4">Last updated: {format(new Date(), 'HH:mm:ss')}</p>}
+          {!isLoading && <p className="text-xs text-muted-foreground mt-4">Last updated: {new Date().toLocaleTimeString('en-US', { hour12: false })}</p>}
         </Card>
       </div>
 
