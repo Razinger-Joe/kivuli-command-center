@@ -1,3 +1,5 @@
 {
+  "buildCommand": "echo 'Static HTML Deployment'",
+  "outputDirectory": ".",
   "cleanUrls": true
 }
