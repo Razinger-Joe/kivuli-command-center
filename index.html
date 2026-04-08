@@ -1,955 +1,1113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Kivuli Command Centre — Sovereign Deception Grid. Real-time cybersecurity threat monitoring dashboard for Kenya.">
-<title>KIVULI — Sovereign Deception Grid</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
---bg-deep:#040d14;--bg-panel:#0a1220;--bg-card:#0d1628;--bg-input:#060f1a;
---border-default:#1a2d42;--border-accent:#1d4a30;
---text-primary:#e2f5ea;--text-secondary:#7a9fb0;--text-muted:#344d5e;--text-mono:#c8dfe8;
---accent-green:#1d9e75;--accent-green-light:#5dcaa5;
---accent-blue:#378add;--accent-blue-light:#85b7eb;
---danger-red:#e24b4a;--danger-red-light:#f09595;
---warning-amber:#ef9f27;--warning-amber-light:#fac775;
---shadow-purple:#534ab7;--shadow-purple-light:#afa9ec;
---font-display:'JetBrains Mono',monospace;--font-body:'Inter',sans-serif;--font-code:'JetBrains Mono',monospace;
-}
-html,body{height:100%;overflow:hidden;background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-body);font-size:11px}
-a{color:inherit;text-decoration:none}
-button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-/* Skip link */
-.skip-link{position:absolute;top:-40px;left:0;background:var(--accent-green);color:#000;padding:8px 16px;z-index:9999;font:600 12px var(--font-display);transition:top .2s}
-.skip-link:focus{top:0}
-/* Layout */
-.app{display:flex;flex-direction:column;height:100vh;min-width:1024px}
-/* Topbar */
-.topbar{display:flex;align-items:center;height:52px;padding:0 20px;background:var(--bg-panel);border-bottom:.5px solid var(--border-default);flex-shrink:0}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-mark{width:28px;height:28px;background:#0f3a20;border:1px solid var(--accent-green);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.logo-text-primary{font:700 16px var(--font-display);color:var(--text-primary);letter-spacing:.12em;line-height:1.2}
-.logo-text-secondary{font:400 9px var(--font-display);color:var(--accent-green-light);letter-spacing:.14em;display:block}
-.topbar-right{display:flex;align-items:center;gap:10px;margin-left:auto}
-.threat-badge{font:700 10px var(--font-display);letter-spacing:.08em;padding:4px 12px;border-radius:20px;transition:all .3s}
-.threat-badge.high{background:#2d0a0a;border:.5px solid var(--danger-red);color:var(--danger-red-light)}
-.threat-badge.low{background:#0a1e0a;border:.5px solid var(--accent-green);color:var(--accent-green-light)}
-.threat-badge.medium{background:#1e1600;border:.5px solid var(--warning-amber);color:var(--warning-amber-light)}
-.threat-badge.critical{background:#3d0505;border:1px solid var(--danger-red);color:var(--danger-red);animation:pulse-badge 1.5s ease-in-out infinite}
-@keyframes pulse-badge{0%,100%{opacity:1}50%{opacity:.6}}
-.grid-pill{display:flex;align-items:center;gap:6px;background:#081a0f;border:.5px solid var(--accent-green);border-radius:20px;padding:4px 12px}
-.grid-dot{width:7px;height:7px;border-radius:50%;background:var(--accent-green);animation:pulse-dot 2s ease-in-out infinite}
-@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
-.grid-pill span{font:400 10px var(--font-display);color:var(--accent-green-light);letter-spacing:.08em}
-/* Nav */
-.nav{display:flex;align-items:center;height:40px;padding:0 20px;background:var(--bg-panel);border-bottom:.5px solid var(--border-default);flex-shrink:0}
-.nav-tab{font:400 11px var(--font-display);letter-spacing:.04em;color:#4a7080;padding:0 14px;height:100%;display:flex;align-items:center;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;cursor:pointer}
-.nav-tab:hover{color:#8ab8d4}
-.nav-tab.active{color:var(--accent-green-light);border-bottom-color:var(--accent-green)}
-.nav-tab:focus-visible{outline:1px solid var(--accent-green);outline-offset:2px}
-/* Main content */
-.main-content{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:12px}
-/* Metric cards row */
-.metric-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.metric-card{background:var(--bg-card);border:.5px solid var(--border-default);border-radius:8px;padding:14px 16px;transition:border-color .2s}
-.metric-card:hover{border-color:var(--danger-red)}
-.metric-card:nth-child(2):hover{border-color:var(--accent-green)}
-.metric-card:nth-child(3):hover{border-color:var(--warning-amber)}
-.metric-card:nth-child(4):hover{border-color:var(--accent-blue)}
-.metric-label{font:400 10px var(--font-display);color:var(--text-muted);letter-spacing:.10em;margin-bottom:6px}
-.metric-value{font:700 40px var(--font-display);line-height:1.1}
-.metric-delta{font:400 10px var(--font-display);margin-top:4px}
-/* Panel rows */
-.panel-row{display:flex;gap:10px;min-height:0}
-.panel-row.row2-left{flex:0 0 55%}
-.panel-row.row2-right{flex:0 0 calc(45% - 10px);display:flex;flex-direction:column;gap:10px}
-.panel{background:var(--bg-panel);border:.5px solid var(--border-default);border-radius:8px;padding:14px 16px}
-.panel-shadow{background:#080f18;border:1px solid #0f3a20}
-.panel-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.panel-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.panel-dot.pulse{animation:pulse-dot 2s ease-in-out infinite}
-.panel-title{font:400 10px var(--font-display);color:var(--text-muted);letter-spacing:.10em}
-/* Map */
-.map-container{background:#050c14;border:.5px solid #1a2840;border-radius:6px;height:220px;position:relative;overflow:hidden}
-.map-scan{position:absolute;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--accent-green),transparent);opacity:.3;animation:scanline 3s linear infinite;z-index:2}
-@keyframes scanline{0%{top:-2px}100%{top:100%}}
-.map-label{position:absolute;font:400 7px var(--font-display);color:#1e3a50;z-index:3;pointer-events:none}
-.map-label-tl{top:6px;left:8px}
-.map-label-bl{bottom:6px;left:8px}
-.map-legend{position:absolute;bottom:8px;right:8px;background:#040c14;border:.5px solid #1a2840;border-radius:4px;padding:6px 8px;display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;z-index:3}
-.legend-item{display:flex;align-items:center;gap:4px;font:400 8px var(--font-display);color:#8ab8d4}
-.legend-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-.node-detail-bar{display:none;background:#050c14;border:.5px solid #1a2840;border-radius:5px;padding:7px 12px;font:400 10px var(--font-display);color:var(--text-mono);margin-top:8px}
-/* Intel feed */
-.feed-list{max-height:200px;overflow:hidden}
-.feed-item{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-radius:5px;background:#050c14;margin-bottom:5px;animation:feedIn .3s ease}
-@keyframes feedIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
-.feed-time{font:400 9px var(--font-display);color:#2e4a60;flex-shrink:0;margin-top:1px;min-width:32px}
-.feed-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px}
-.feed-msg{font:400 11px var(--font-body);color:#8ab8d4;line-height:1.4}
-/* Attacks chart */
-.chart-container{height:70px;display:flex;align-items:flex-end;gap:3px;margin-top:6px}
-.chart-bar{flex:1;border-radius:2px 2px 0 0;background:var(--border-default);transition:height .5s ease;min-width:4px}
-.chart-bar.current{background:var(--accent-green)}
-.chart-axis{display:flex;justify-content:space-between;margin-top:4px;font:400 8px var(--font-display);color:#2e4a60}
-/* Shadow assets */
-.asset-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:#050c14;border:.5px solid #1a2840;border-radius:6px;margin-bottom:6px;cursor:pointer;transition:border-color .15s}
-.asset-item:hover{border-color:var(--border-accent)}
-.asset-icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.asset-info{flex:1;min-width:0}
-.asset-name{font:500 11px var(--font-body);color:#c8e6d4}
-.asset-detail{font:400 10px var(--font-display);color:#3a5a70;margin-top:2px}
-.asset-toggle-area{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.toggle-label{font:400 9px var(--font-display);color:#3a5a70}
-.toggle-label.on{color:var(--accent-green)}
-.toggle{width:30px;height:16px;border-radius:8px;background:#1a2840;border:.5px solid #2a3d50;position:relative;cursor:pointer;transition:all .2s}
-.toggle.active{background:#0f3a20;border-color:var(--accent-green)}
-.toggle-knob{width:12px;height:12px;border-radius:50%;background:#2e4a60;position:absolute;top:1.5px;left:1.5px;transition:transform .2s ease}
-.toggle.active .toggle-knob{background:var(--accent-green);transform:translateX(14px)}
-.toggle:focus-visible{outline:1px solid var(--accent-green);outline-offset:2px}
-.btn-grc{width:100%;margin-top:10px;padding:9px;background:#091a0f;border:.5px solid #0f6e56;border-radius:6px;color:var(--accent-green-light);font:400 11px var(--font-display);letter-spacing:.06em;text-align:center;cursor:pointer;transition:all .15s}
-.btn-grc:hover{background:#0f2e1e;border-color:var(--accent-green)}
-.btn-grc:active{transform:scale(.98)}
-.btn-grc:focus-visible{outline:1px solid var(--accent-green);outline-offset:2px}
-/* Alerts table */
-.alerts-table{width:100%;border-collapse:collapse}
-.alerts-table thead th{font:400 9px var(--font-display);color:#2e4a60;letter-spacing:.08em;text-align:left;padding:4px 8px;border-bottom:.5px solid #1a2840}
-.alerts-table tbody tr{cursor:pointer;transition:background .15s;animation:feedIn .3s ease}
-.alerts-table tbody tr:hover{background:#060d18}
-.alerts-table tbody td{padding:7px 8px;border-bottom:.5px solid #0d1628;font:400 11px var(--font-display);color:#8ab8d4}
-.sev-dot{width:7px;height:7px;border-radius:50%;display:inline-block}
-.type-badge{font:400 9px var(--font-display);padding:2px 6px;border-radius:3px;display:inline-block}
-/* Statusbar */
-.statusbar{display:flex;align-items:center;gap:20px;height:36px;padding:0 20px;background:var(--bg-panel);border-top:.5px solid var(--border-default);flex-shrink:0}
-.status-item{display:flex;align-items:center;gap:5px}
-.status-label{font:400 10px var(--font-display);color:#2e4a60;letter-spacing:.06em}
-.status-value{font:500 10px var(--font-display)}
-.status-right{margin-left:auto;display:flex;align-items:center;gap:20px}
-/* Modal */
-.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(4,13,20,.85);z-index:1000;align-items:center;justify-content:center}
-.modal-overlay.show{display:flex}
-.modal-box{background:var(--bg-card);border:.5px solid var(--border-default);border-radius:8px;padding:20px;width:440px;max-width:90%;position:relative;animation:modalIn .2s ease}
-@keyframes modalIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
-.modal-close{position:absolute;top:12px;right:14px;font:400 16px var(--font-display);color:var(--text-muted);cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:4px}
-.modal-close:hover{color:var(--text-primary);background:#1a2d42}
-.modal-close:focus-visible{outline:1px solid var(--accent-green);outline-offset:2px}
-.modal-title{font:600 13px var(--font-display);color:var(--text-primary);letter-spacing:.06em;margin-bottom:14px}
-.modal-field{margin-bottom:8px;font:400 10px var(--font-display);color:var(--text-secondary)}
-.modal-field strong{color:var(--text-mono)}
-.modal-actions{display:flex;gap:8px;margin-top:16px}
-.modal-btn{padding:7px 14px;border-radius:5px;font:500 10px var(--font-display);letter-spacing:.04em;border:1px solid;cursor:pointer;transition:all .15s}
-.modal-btn:hover{filter:brightness(1.2)}
-.modal-btn:active{transform:scale(.97)}
-.modal-btn:focus-visible{outline:1px solid var(--accent-green);outline-offset:2px}
-/* Tab views */
-.tab-view{display:none;flex:1;min-height:0}
-.tab-view.active{display:flex;flex-direction:column;gap:12px}
-/* Expanded map view */
-.expanded-map-row{display:flex;gap:0;flex:1;min-height:0}
-.expanded-map{flex:1;position:relative;overflow:hidden;background:#050c14;border:.5px solid #1a2840;border-radius:8px}
-.node-sidebar{width:280px;background:var(--bg-panel);border-left:.5px solid var(--border-default);padding:14px 16px;overflow-y:auto;border-radius:0 8px 8px 0}
-.sidebar-title{font:600 11px var(--font-display);letter-spacing:.08em;color:var(--accent-green-light);margin-bottom:12px}
-.sidebar-field{font:400 10px var(--font-display);color:var(--text-secondary);margin-bottom:6px}
-.sidebar-field strong{color:var(--text-mono);display:block;margin-bottom:2px;font-size:9px;letter-spacing:.08em}
-.sidebar-events{margin-top:10px}
-.sidebar-event{font:400 9px var(--font-display);color:#3a5a70;padding:4px 0;border-bottom:.5px solid #0d1628}
-/* Shadow assets expanded */
-.shadow-expanded{display:flex;gap:10px;flex:1;min-height:0}
-.shadow-left{flex:1;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
-.shadow-right{flex:1;display:flex;flex-direction:column;overflow-y:auto}
-.deploy-form{background:var(--bg-panel);border:.5px solid var(--border-default);border-radius:8px;padding:14px 16px}
-.form-group{margin-bottom:10px}
-.form-label{font:400 9px var(--font-display);color:var(--text-muted);letter-spacing:.08em;display:block;margin-bottom:4px}
-.form-input,.form-select{width:100%;padding:7px 10px;background:var(--bg-input);border:.5px solid var(--border-default);border-radius:5px;color:var(--text-mono);font:400 11px var(--font-display);outline:none;transition:border-color .15s}
-.form-input:focus,.form-select:focus{border-color:var(--accent-green)}
-.form-select option{background:var(--bg-input);color:var(--text-mono)}
-.btn-deploy{width:100%;padding:9px;background:#091a0f;border:.5px solid #0f6e56;border-radius:6px;color:var(--accent-green-light);font:500 11px var(--font-display);letter-spacing:.06em;cursor:pointer;transition:all .15s}
-.btn-deploy:hover{background:#0f2e1e;border-color:var(--accent-green)}
-.btn-deploy:active{transform:scale(.98)}
-.btn-deploy:focus-visible{outline:1px solid var(--accent-green);outline-offset:2px}
-.asset-log-item{font:400 10px var(--font-display);color:#3a5a70;padding:6px 8px;border-bottom:.5px solid #0d1628}
-.asset-log-item .log-time{color:#2e4a60;margin-right:8px}
-/* GRC view */
-.grc-layout{display:flex;gap:10px;flex:1;min-height:0}
-.grc-left{width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
-.grc-right{flex:1;overflow-y:auto;background:var(--bg-panel);border:.5px solid var(--border-default);border-radius:8px;padding:20px}
-.report-card{background:#050c14;border:.5px solid #1a2840;border-radius:6px;padding:10px 12px;cursor:pointer;transition:border-color .15s}
-.report-card:hover,.report-card.selected{border-color:var(--accent-green)}
-.report-card-title{font:500 11px var(--font-body);color:var(--text-mono)}
-.report-card-meta{font:400 9px var(--font-display);color:#3a5a70;margin-top:4px;display:flex;gap:10px}
-.report-score{font:700 10px var(--font-display)}
-.grc-section{margin-bottom:16px}
-.grc-section h3{font:600 11px var(--font-display);color:var(--accent-green-light);letter-spacing:.08em;margin-bottom:8px;padding-bottom:4px;border-bottom:.5px solid #1a2840}
-.grc-section p{font:400 11px var(--font-body);color:var(--text-secondary);line-height:1.6;margin-bottom:6px}
-.grc-checklist{list-style:none;padding:0}
-.grc-checklist li{font:400 10px var(--font-display);color:var(--text-secondary);padding:4px 0;display:flex;align-items:center;gap:6px}
-.check-icon{font-size:11px}
-.check-pass{color:var(--accent-green)}
-.check-fail{color:var(--danger-red)}
-.btn-generate{padding:9px;background:#091a0f;border:.5px solid #0f6e56;border-radius:6px;color:var(--accent-green-light);font:500 11px var(--font-display);letter-spacing:.06em;cursor:pointer;width:100%;transition:all .15s}
-.btn-generate:hover{background:#0f2e1e;border-color:var(--accent-green)}
-.btn-generate:active{transform:scale(.98)}
-.btn-generate:focus-visible{outline:1px solid var(--accent-green);outline-offset:2px}
-/* Intel feed view */
-.feed-view-container{display:flex;flex-direction:column;flex:1;min-height:0}
-.filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.filter-pill{font:400 10px var(--font-display);padding:4px 12px;border-radius:20px;border:.5px solid var(--border-default);color:var(--text-muted);cursor:pointer;transition:all .15s;letter-spacing:.06em}
-.filter-pill.active{background:var(--accent-green);border-color:var(--accent-green);color:#040d14;font-weight:600}
-.filter-pill:hover:not(.active){border-color:var(--accent-green-light);color:var(--accent-green-light)}
-.filter-pill:focus-visible{outline:1px solid var(--accent-green);outline-offset:2px}
-.search-input{padding:5px 12px;background:var(--bg-input);border:.5px solid var(--border-default);border-radius:20px;color:var(--text-mono);font:400 10px var(--font-display);outline:none;width:200px;margin-left:auto;transition:border-color .15s}
-.search-input:focus{border-color:var(--accent-green)}
-.full-feed{flex:1;overflow-y:auto;padding-right:4px}
-.full-feed .feed-item{background:#050c14;margin-bottom:5px}
-.scroll-indicator{display:none;text-align:center;padding:6px;font:400 9px var(--font-display);color:var(--accent-green-light);cursor:pointer;background:#091a0f;border:.5px solid #0f3a20;border-radius:20px;margin-top:6px}
-.scroll-indicator.show{display:block}
-/* Loading indicator */
-.loading{display:inline-block;width:14px;height:14px;border:2px solid #1a2d42;border-top-color:var(--accent-green);border-radius:50%;animation:spin .6s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-/* Focus visible */
-*:focus-visible{outline:1px solid var(--accent-green);outline-offset:2px}
-button:focus:not(:focus-visible),div[role="switch"]:focus:not(:focus-visible){outline:none}
-/* Scrollbar */
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-track{background:var(--bg-deep)}
-::-webkit-scrollbar-thumb{background:#1a2d42;border-radius:2px}
-::-webkit-scrollbar-thumb:hover{background:#2a3d50}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kivuli Command Centre — Africa's Digital Shield</title>
+  <meta name="description" content="Unify, control, and streamline your entire infrastructure from a single, powerful command dashboard. Kivuli Command Centre for Africa's digital future.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030608;
+      --bg-panel: rgba(10, 15, 25, 0.85);
+      --bg-card: rgba(12, 18, 30, 0.9);
+      --primary: #ff3232;
+      --primary-dim: rgba(255, 50, 50, 0.6);
+      --primary-glow: rgba(255, 50, 50, 0.15);
+      --primary-faint: rgba(255, 50, 50, 0.05);
+      --amber: #ffc832;
+      --amber-dim: rgba(255, 200, 50, 0.6);
+      --emerald: #10b981;
+      --emerald-dim: rgba(16, 185, 129, 0.6);
+      --text-primary: rgba(255, 255, 255, 0.95);
+      --text-secondary: rgba(255, 255, 255, 0.55);
+      --text-muted: rgba(255, 255, 255, 0.25);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-primary: rgba(255, 50, 50, 0.2);
+      --radius: 12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::selection { background: rgba(255,50,50,0.3); color: #fff; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,50,50,0.2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,50,50,0.4); }
+
+    /* === ANIMATIONS === */
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes orb { 0% { transform: translateY(-30px); } 100% { transform: translateY(30px); } }
+    @keyframes ping { 0% { transform: scale(1); opacity: 0.75; } 100% { transform: scale(2.5); opacity: 0; } }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    @keyframes slide-in-top { from { transform: translateY(-8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .anim-fi { animation: fade-in 0.6s ease both; }
+    .anim-fiu { animation: fade-in-up 0.6s ease both; }
+    .anim-fiu-1 { animation: fade-in-up 0.6s ease 0.1s both; }
+    .anim-fiu-2 { animation: fade-in-up 0.6s ease 0.2s both; }
+    .anim-fiu-3 { animation: fade-in-up 0.6s ease 0.3s both; }
+    .anim-fiu-4 { animation: fade-in-up 0.6s ease 0.4s both; }
+    .anim-fiu-5 { animation: fade-in-up 0.6s ease 0.5s both; }
+
+    /* === NAVBAR === */
+    #navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 64px;
+      background: rgba(10,15,25,0.7); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border); transition: all 0.3s ease;
+    }
+    #navbar.scrolled { backdrop-filter: blur(40px); box-shadow: 0 4px 30px rgba(0,0,0,0.5); }
+    .nav-inner { max-width: 1400px; margin: 0 auto; height: 100%; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; }
+    .nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-logo-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #ff3232, #ff6644); display: flex; align-items: center; justify-content: center; transition: box-shadow 0.3s; }
+    .nav-logo:hover .nav-logo-icon { box-shadow: 0 0 20px rgba(255,50,50,0.4); }
+    .nav-logo-text { font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+    .nav-desktop { display: flex; align-items: center; gap: 2rem; }
+    .nav-link { font-size: 14px; color: var(--text-secondary); text-decoration: none; transition: color 0.2s; }
+    .nav-link:hover { color: var(--primary); }
+    .nav-cta {
+      background: linear-gradient(135deg, #ff3232, #ff6644); color: #fff; font-weight: 600;
+      font-size: 14px; padding: 8px 20px; border-radius: 10px; border: none; cursor: pointer;
+      box-shadow: 0 0 20px rgba(255,50,50,0.2); transition: all 0.3s; text-decoration: none; display: inline-block;
+    }
+    .nav-cta:hover { box-shadow: 0 0 30px rgba(255,50,50,0.4); transform: scale(1.02); }
+    .nav-mobile-btn { display: none; background: none; border: none; color: var(--text-primary); cursor: pointer; font-size: 24px; }
+    .nav-mobile-menu { display: none; flex-direction: column; padding: 1rem 2rem; gap: 12px;
+      background: rgba(10,15,25,0.9); backdrop-filter: blur(20px); border-top: 1px solid var(--border); animation: fade-in 0.3s ease; }
+    .nav-mobile-menu.open { display: flex; }
+    .nav-mobile-menu .nav-link { padding: 8px 0; }
+    @media (max-width: 767px) {
+      .nav-desktop { display: none; }
+      .nav-mobile-btn { display: block; }
+    }
+
+    /* === HERO === */
+    #hero {
+      position: relative; min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; padding-top: 128px; padding-bottom: 128px; overflow: hidden;
+    }
+    .hero-mesh {
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse at 20% 50%, rgba(255,50,50,0.08) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 20%, rgba(255,100,50,0.05) 0%, transparent 40%),
+                  radial-gradient(ellipse at 50% 100%, rgba(200,30,30,0.06) 0%, transparent 50%);
+    }
+    .hero-grid {
+      position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(0deg, rgba(255,50,50,0.03) 0px, transparent 1px, transparent 60px),
+                  repeating-linear-gradient(90deg, rgba(255,50,50,0.03) 0px, transparent 1px, transparent 60px);
+    }
+    .hero-orb { position: absolute; border-radius: 50%; animation: orb 8s ease-in-out infinite alternate; }
+    .hero-orb-1 { top: 25%; left: 25%; width: 288px; height: 288px; background: rgba(255,50,50,0.05); filter: blur(100px); }
+    .hero-orb-2 { bottom: 25%; right: 25%; width: 384px; height: 384px; background: rgba(255,150,50,0.04); filter: blur(120px); animation-delay: -4s; }
+    .hero-orb-3 { top: 50%; right: 33%; width: 192px; height: 192px; background: rgba(200,50,50,0.04); filter: blur(80px); animation-delay: -8s; }
+    .hero-content {
+      position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center;
+      text-align: center; gap: 24px; max-width: 1200px; margin: 0 auto; padding: 80px 1.5rem;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px;
+      border-radius: 999px; border: 1px solid rgba(255,50,50,0.3); background: rgba(255,50,50,0.05);
+      color: var(--primary); font-size: 14px; font-family: 'JetBrains Mono', monospace;
+    }
+    .pulse-dot { position: relative; width: 8px; height: 8px; }
+    .pulse-dot-inner { position: absolute; inset: 0; border-radius: 50%; }
+    .pulse-dot-ping { position: absolute; inset: 0; border-radius: 50%; opacity: 0.75; animation: ping 1s cubic-bezier(0,0,0.2,1) infinite; }
+    .hero-h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; letter-spacing: -0.03em;
+      line-height: 1.1; max-width: 900px; color: var(--text-primary);
+    }
+    .text-gradient {
+      background: linear-gradient(135deg, #ff3232, #ff8844);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-sub { font-size: clamp(1rem, 2vw, 1.2rem); color: var(--text-secondary); max-width: 600px; line-height: 1.7; }
+    .hero-ctas { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: center; }
+    .btn-primary {
+      background: linear-gradient(135deg, #ff3232, #ff6644); color: #fff; font-size: 16px;
+      font-weight: 600; padding: 14px 32px; border-radius: 14px; border: none; cursor: pointer;
+      box-shadow: 0 0 30px rgba(255,50,50,0.3); transition: all 0.3s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-primary:hover { box-shadow: 0 0 50px rgba(255,50,50,0.5); transform: scale(1.05); }
+    .btn-primary svg { transition: transform 0.3s; }
+    .btn-primary:hover svg { transform: translateX(4px); }
+    .btn-secondary {
+      background: transparent; color: var(--text-primary); font-size: 16px; padding: 14px 32px;
+      border-radius: 14px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer;
+      transition: all 0.3s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+    }
+    .btn-secondary:hover { border-color: rgba(255,50,50,0.5); background: rgba(255,50,50,0.05); }
+    .hero-stats { display: flex; flex-wrap: wrap; gap: 32px; align-items: center; justify-content: center; margin-top: 16px; }
+    .stat-item { text-align: center; padding: 0 16px; }
+    .stat-value { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text-primary); }
+    .stat-suffix { color: var(--primary); }
+    .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+    /* === THREAT MAP === */
+    .map-wrapper { position: relative; margin-top: 40px; width: 100%; max-width: 1100px; }
+    .map-outer-glow { position: absolute; inset: -1px; border-radius: 20px; background: linear-gradient(to bottom, rgba(255,50,50,0.3), rgba(255,50,50,0.1), transparent); filter: blur(4px); transition: 0.5s; }
+    .map-wrapper:hover .map-outer-glow { background: linear-gradient(to bottom, rgba(255,50,50,0.4), rgba(255,50,50,0.15), transparent); }
+    .map-ambient { position: absolute; inset: -16px; border-radius: 24px; background: linear-gradient(to bottom, rgba(255,50,50,0.05), transparent); filter: blur(32px); }
+    .map-container {
+      position: relative; width: 100%; aspect-ratio: 21/9; border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.1); box-shadow: inset 0 0 40px rgba(0,0,0,0.5);
+      background: radial-gradient(ellipse at center, hsl(0,30%,10%), hsl(0,40%,3%));
+    }
+    @media (max-width: 767px) { .map-container { aspect-ratio: 4/3; } }
+    #threat-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .map-crt {
+      position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(rgba(255,50,50,0.05) 0px, transparent 1px, transparent 20px),
+                  repeating-linear-gradient(90deg, rgba(255,50,50,0.05) 0px, transparent 1px, transparent 20px);
+    }
+    .map-header {
+      position: absolute; top: 0; left: 0; right: 0; z-index: 10; display: flex; flex-wrap: wrap;
+      justify-content: space-between; align-items: center; padding: 8px 16px; gap: 8px;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,50,50,0.2);
+    }
+    .map-header-left { display: flex; align-items: center; gap: 12px; }
+    .map-header-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.9); font-weight: 700; letter-spacing: 0.2em; }
+    .map-header-right { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+    .map-badge { padding: 2px 8px; border-radius: 4px; }
+    .map-badge-red { background: rgba(255,50,50,0.1); border: 1px solid rgba(255,50,50,0.2); }
+    .map-badge-amber { background: rgba(255,200,50,0.1); border: 1px solid rgba(255,200,50,0.2); }
+    .map-badge-green { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); }
+    .map-feed {
+      position: absolute; bottom: 12px; right: 12px; z-index: 10; width: 260px;
+      background: rgba(10,15,25,0.6); backdrop-filter: blur(20px); border-radius: 10px;
+      border: 1px solid rgba(255,50,50,0.2); box-shadow: 0 0 15px rgba(255,50,50,0.1); overflow: hidden;
+    }
+    @media (max-width: 767px) { .map-feed { display: none; } }
+    .map-feed-header { padding: 6px 12px; border-bottom: 1px solid rgba(255,50,50,0.2); background: rgba(255,50,50,0.05); }
+    .map-feed-header span { font-family: 'JetBrains Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--primary); display: flex; align-items: center; gap: 6px; }
+    .map-feed-list { padding: 8px; max-height: 160px; overflow: hidden; display: flex; flex-direction: column; gap: 4px; }
+    .feed-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 2px 0; animation: slide-in-top 0.3s ease; }
+    .feed-item-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .feed-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; animation: pulse 2s ease-in-out infinite; }
+    .feed-item-right { font-size: 8px; color: rgba(255,255,255,0.4); flex-shrink: 0; display: flex; align-items: center; gap: 4px; font-weight: 700; }
+    .map-legend {
+      position: absolute; bottom: 12px; left: 12px; z-index: 10; display: flex; flex-direction: column; gap: 6px;
+      background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .legend-label { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; }
+    .map-reflection { position: absolute; inset: 0; border-radius: 16px; background: linear-gradient(to bottom, transparent 60%, var(--bg) 100%); pointer-events: none; }
+
+    /* === COMMAND DASHBOARD === */
+    #command-dashboard {
+      position: relative; width: 100%; background: var(--bg); border-top: 1px solid rgba(255,50,50,0.2);
+      padding-bottom: 48px; margin-top: 48px; overflow: hidden;
+    }
+    .dash-bg-radial { position: absolute; inset: 0; background: radial-gradient(ellipse at top, rgba(255,50,50,0.05), transparent 50%); pointer-events: none; }
+    .dash-bg-grid { position: absolute; inset: 0; pointer-events: none; opacity: 0.5;
+      background: repeating-linear-gradient(rgba(255,50,50,0.03) 0px, transparent 1px, transparent 40px),
+                  repeating-linear-gradient(90deg, rgba(255,50,50,0.03) 0px, transparent 1px, transparent 40px);
+    }
+    .dash-inner { max-width: 1400px; margin: 0 auto; padding: 0 1.5rem; position: relative; z-index: 10; }
+    .dash-row { display: grid; gap: 24px; margin-bottom: 24px; }
+    .dash-row-1 { grid-template-columns: 8fr 4fr; }
+    .dash-row-2 { grid-template-columns: 8fr 4fr; }
+    @media (max-width: 1023px) { .dash-row-1, .dash-row-2 { grid-template-columns: 1fr; } }
+    .panel {
+      background: rgba(10,15,25,0.5); backdrop-filter: blur(20px); border-radius: var(--radius);
+      border: 1px solid rgba(255,50,50,0.2); overflow: hidden; display: flex; flex-direction: column;
+    }
+    .panel-header {
+      padding: 12px 16px; border-bottom: 1px solid rgba(255,50,50,0.2); background: rgba(255,50,50,0.05);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-title {
+      text-transform: uppercase; letter-spacing: 0.15em; font-size: 11px; color: var(--primary);
+      font-weight: 600; font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 8px;
+    }
+    .panel-badge { font-size: 10px; font-family: 'JetBrains Mono', monospace; padding: 2px 10px; border-radius: 999px; }
+
+    /* Telemetry Graph */
+    .telemetry-body { flex: 1; padding: 16px 16px 0 0; position: relative; min-height: 280px; }
+    #telemetry-canvas { width: 100%; height: 100%; }
+    .telem-legend { display: flex; gap: 16px; font-size: 9px; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+    .telem-legend-item { display: flex; align-items: center; gap: 6px; }
+    .telem-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* Active Intercept */
+    .intercept-body { flex: 1; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; overflow: hidden; }
+    .intercept-standby { display: flex; flex-direction: column; align-items: center; opacity: 0.3; color: var(--primary); }
+    .intercept-standby p { font-size: 10px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.2em; margin-top: 12px; }
+    .intercept-active { width: 100%; display: flex; flex-direction: column; animation: fade-in 0.3s ease; }
+    .intercept-status { padding: 12px; border-radius: 8px; border: 1px solid; display: flex; gap: 16px; align-items: center; }
+    .intercept-status.scanning, .intercept-status.analyzing { background: rgba(255,50,50,0.1); border-color: rgba(255,50,50,0.3); color: #ff5555; }
+    .intercept-status.neutralized { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); color: #10b981; }
+    .intercept-status h2 { font-size: 14px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; }
+    .intercept-status .iid { font-size: 10px; font-family: 'JetBrains Mono', monospace; opacity: 0.8; margin-top: 4px; }
+    .intercept-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .intercept-cell { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; }
+    .intercept-cell.span2 { grid-column: span 2; }
+    .intercept-cell-label { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-muted); margin-bottom: 4px; }
+    .intercept-cell-value { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-primary); }
+    .intercept-progress { margin-top: 16px; }
+    .intercept-progress-label { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 8px; opacity: 0.6; margin-bottom: 4px; }
+    .intercept-bar { height: 6px; background: rgba(0,0,0,0.4); border-radius: 3px; overflow: hidden; }
+    .intercept-bar-fill { height: 100%; transition: width 0.1s; border-radius: 3px; }
+    .blocked-stamp {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10;
+      animation: fade-in 0.4s ease; pointer-events: none;
+    }
+    .blocked-stamp-inner {
+      border: 4px solid #10b981; color: #10b981; font-size: 28px; font-weight: 900;
+      letter-spacing: 0.3em; padding: 8px 24px; border-radius: 10px; transform: rotate(-12deg);
+      background: rgba(10,15,25,0.8); backdrop-filter: blur(8px); box-shadow: 0 0 30px rgba(16,185,129,0.3);
+      display: flex; align-items: center; gap: 12px; font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Terminal Feed */
+    .terminal-body {
+      flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    }
+    .terminal-body::-webkit-scrollbar { width: 4px; }
+    .terminal-body::-webkit-scrollbar-thumb { background: rgba(255,50,50,0.2); border-radius: 4px; }
+    .log-entry { display: flex; gap: 8px; opacity: 0.8; transition: opacity 0.2s; animation: fade-in 0.3s ease; }
+    .log-entry:hover { opacity: 1; }
+    .log-ts { color: var(--text-muted); flex-shrink: 0; }
+    .log-critical { color: #ff5555; font-weight: 700; }
+    .log-warn { color: #f59e0b; }
+    .log-msg { color: rgba(255,255,255,0.8); word-break: break-word; }
+    .terminal-prompt { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+    .terminal-pulse { width: 8px; height: 8px; background: var(--primary); border-radius: 2px; animation: pulse 2s ease-in-out infinite; }
+
+    /* Node Health */
+    .nodes-grid { padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; }
+    @media (max-width: 1023px) { .nodes-grid { grid-template-columns: 1fr; } }
+    .node-card { border: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 12px; position: relative; overflow: hidden; }
+    .node-card-header { display: flex; justify-content: space-between; align-items: flex-start; position: relative; z-index: 1; }
+    .node-name { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+    .node-ping { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-muted); margin-top: 2px; }
+    .node-status { font-size: 9px; font-family: 'JetBrains Mono', monospace; font-weight: 700; padding: 2px 6px; border-radius: 4px; border: 1px solid; text-transform: uppercase; letter-spacing: 0.08em; }
+    .status-online { color: #10b981; background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3); }
+    .status-warn { color: #f59e0b; background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); }
+    .status-critical { color: #ef4444; background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); }
+    .node-metrics { display: flex; flex-direction: column; gap: 10px; position: relative; z-index: 1; }
+    .metric-header { display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 9px; }
+    .metric-label { color: var(--text-muted); }
+    .metric-value { color: rgba(255,255,255,0.8); }
+    .metric-bar { height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
+    .metric-bar-fill { height: 100%; border-radius: 2px; transition: width 1s ease-out; }
+    .bar-green { background: #10b981; }
+    .bar-amber { background: #f59e0b; }
+    .bar-red { background: #ef4444; }
+    .node-critical-glow { position: absolute; inset: 0; background: rgba(255,50,50,0.05); border-radius: 10px; animation: pulse 2s ease-in-out infinite; }
+
+    /* === FOOTER CTA === */
+    #footer-cta { position: relative; padding: 112px 0; overflow: hidden; text-align: center; }
+    .cta-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 600px; height: 600px; border-radius: 50%; background: rgba(255,50,50,0.05); filter: blur(150px); }
+    .cta-heading { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 16px; }
+    .cta-sub { font-size: 18px; color: var(--text-secondary); max-width: 500px; margin: 0 auto 32px; }
+    .cta-btn { box-shadow: 0 0 40px rgba(255,50,50,0.3); }
+    .cta-btn:hover { box-shadow: 0 0 60px rgba(255,50,50,0.5); }
+
+    /* Scroll reveal */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.revealed { opacity: 1; transform: translateY(0); }
+    .reveal-d1 { transition-delay: 0.1s; }
+    .reveal-d2 { transition-delay: 0.2s; }
+
+    /* === FOOTER === */
+    footer { padding: 40px 0; border-top: 1px solid var(--border); }
+    .footer-inner { max-width: 1400px; margin: 0 auto; padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+    .footer-logo { display: flex; align-items: center; gap: 8px; }
+    .footer-logo-icon { width: 28px; height: 28px; border-radius: 7px; background: linear-gradient(135deg, #ff3232, #ff6644); display: flex; align-items: center; justify-content: center; }
+    .footer-logo-text { font-weight: 700; font-size: 14px; color: var(--text-primary); }
+    .footer-copy { font-size: 12px; color: var(--text-muted); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-link { font-size: 12px; color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+    .footer-link:hover { color: var(--primary); }
+    @media (max-width: 767px) { .footer-inner { flex-direction: column; text-align: center; } }
+  </style>
 </head>
 <body>
-<a href="#main-content" class="skip-link">Skip to main content</a>
-<div class="app">
-<!-- TOPBAR -->
-<header class="topbar">
-<div class="logo">
-<div class="logo-mark"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="8,1 14,4.5 14,11.5 8,15 2,11.5 2,4.5" stroke="#1d9e75" stroke-width="1.2" fill="none"/><polygon points="8,4 11,5.75 11,10.25 8,12 5,10.25 5,5.75" fill="#1d9e75" opacity=".3"/><circle cx="8" cy="8" r="1.2" fill="#1d9e75"/></svg></div>
-<div><span class="logo-text-primary">KIVULI</span><span class="logo-text-secondary">SOVEREIGN DECEPTION GRID</span></div>
-</div>
-<div class="topbar-right">
-<div class="threat-badge high" id="threat-level-badge">THREAT: HIGH</div>
-<div class="grid-pill"><div class="grid-dot"></div><span>GRID ACTIVE</span></div>
-</div>
-</header>
-<!-- NAV -->
-<nav class="nav" role="navigation" aria-label="Main navigation">
-<div class="nav-tab active" data-tab="overview" tabindex="0">Overview</div>
-<div class="nav-tab" data-tab="threat-map" tabindex="0">Threat map</div>
-<div class="nav-tab" data-tab="shadow-assets" tabindex="0">Shadow assets</div>
-<div class="nav-tab" data-tab="grc-reports" tabindex="0">GRC reports</div>
-<div class="nav-tab" data-tab="intel-feed" tabindex="0">Intel feed</div>
-</nav>
-<!-- MAIN -->
-<main class="main-content" id="main-content" role="main">
-<!-- === OVERVIEW TAB === -->
-<div class="tab-view active" id="view-overview">
-<div class="metric-row">
-<div class="metric-card" id="card-active-threats"><div class="metric-label">ACTIVE THREATS</div><div class="metric-value" id="metric-threats" style="color:#e24b4a">247</div><div class="metric-delta" id="metric-threats-delta" style="color:#e24b4a">+18 last hour</div></div>
-<div class="metric-card" id="card-shadow-assets"><div class="metric-label">SHADOW ASSETS</div><div class="metric-value" id="metric-shadows" style="color:#1d9e75">12</div><div class="metric-delta" id="metric-shadows-delta" style="color:#5dcaa5">8 honeypots active</div></div>
-<div class="metric-card" id="card-threats-trapped"><div class="metric-label">THREATS TRAPPED</div><div class="metric-value" id="metric-trapped" style="color:#ef9f27">84</div><div class="metric-delta" id="metric-trapped-delta" style="color:#fac775">+5 this session</div></div>
-<div class="metric-card" id="card-system-health"><div class="metric-label">SYSTEM HEALTH</div><div class="metric-value" id="metric-health" style="color:#378add">98%</div><div class="metric-delta" id="metric-health-delta" style="color:#5dcaa5">All nodes nominal</div></div>
-</div>
-<!-- Row 2 -->
-<div class="panel-row" style="display:flex">
-<div class="panel" style="flex:0 0 55%" id="panel-threat-map">
-<div class="panel-header"><div class="panel-dot pulse" style="background:#1d9e75"></div><div class="panel-title">KENYAN THREAT MAP — LIVE</div></div>
-<div class="map-container" id="map-container">
-<div class="map-scan"></div>
-<svg width="100%" height="100%" id="map-svg" style="position:absolute;top:0;left:0"></svg>
-<div class="map-label map-label-tl">KE-CERT REGIONAL FEED v2.1</div>
-<div class="map-label map-label-bl">LAT 1.28°N  LON 36.82°E  NAIROBI NODE</div>
-<div class="map-legend">
-<div class="legend-item"><div class="legend-dot" style="background:#e24b4a"></div>Critical</div>
-<div class="legend-item"><div class="legend-dot" style="background:#ef9f27"></div>High</div>
-<div class="legend-item"><div class="legend-dot" style="background:#378add"></div>Med</div>
-<div class="legend-item"><div class="legend-dot" style="background:#1d9e75"></div>Low</div>
-</div>
-</div>
-<div class="node-detail-bar" id="node-detail-bar"></div>
-</div>
-<div style="flex:0 0 calc(45% - 10px);display:flex;flex-direction:column;gap:10px">
-<div class="panel" id="panel-intel-feed">
-<div class="panel-header"><div class="panel-dot" style="background:#ef9f27"></div><div class="panel-title">LIVE INTEL FEED</div></div>
-<div class="feed-list" id="intel-feed-list" aria-live="polite" aria-atomic="false"></div>
-</div>
-<div class="panel" id="panel-attacks-chart">
-<div class="panel-header"><div class="panel-dot" style="background:#378add"></div><div class="panel-title">ATTACKS / 24H</div></div>
-<div class="chart-container" id="chart-container"></div>
-<div class="chart-axis"><span>-12h</span><span>now</span></div>
-</div>
-</div>
-</div>
-<!-- Row 3 -->
-<div class="panel-row" style="display:flex">
-<div class="panel panel-shadow" style="flex:0 0 55%" id="panel-shadow-assets">
-<div class="panel-header"><svg width="12" height="12" viewBox="0 0 12 12"><polygon points="6,0.5 11,3 11,9 6,11.5 1,9 1,3" stroke="#1d9e75" stroke-width="1" fill="none"/><circle cx="6" cy="6" r="1.5" fill="#1d9e75"/></svg><div class="panel-title" style="color:#5dcaa5">SHADOW ASSET CONTROL</div></div>
-<div id="shadow-asset-list"></div>
-<button class="btn-grc" id="btn-grc-report" tabindex="0">Generate GRC Report (Kenya DPA 2019) ↗</button>
-</div>
-<div class="panel" style="flex:0 0 calc(45% - 10px)" id="panel-active-alerts">
-<div class="panel-header"><div class="panel-dot pulse" style="background:#e24b4a"></div><div class="panel-title">ACTIVE ALERTS</div></div>
-<table class="alerts-table" id="alerts-table"><thead><tr><th>SEV</th><th>TARGET</th><th>TYPE</th><th>TIME</th><th>STATUS</th></tr></thead><tbody id="alerts-tbody"></tbody></table>
-</div>
-</div>
-</div>
-<!-- === THREAT MAP TAB === -->
-<div class="tab-view" id="view-threat-map">
-<div class="expanded-map-row">
-<div class="expanded-map" id="expanded-map-container">
-<div class="map-scan"></div>
-<svg width="100%" height="100%" id="expanded-map-svg" style="position:absolute;top:0;left:0"></svg>
-<div class="map-label map-label-tl">KE-CERT REGIONAL FEED v2.1</div>
-<div class="map-label map-label-bl">LAT 1.28°N  LON 36.82°E  NAIROBI NODE</div>
-<div class="map-legend">
-<div class="legend-item"><div class="legend-dot" style="background:#e24b4a"></div>Critical</div>
-<div class="legend-item"><div class="legend-dot" style="background:#ef9f27"></div>High</div>
-<div class="legend-item"><div class="legend-dot" style="background:#378add"></div>Med</div>
-<div class="legend-item"><div class="legend-dot" style="background:#1d9e75"></div>Low</div>
-</div>
-</div>
-<div class="node-sidebar" id="node-sidebar">
-<div class="sidebar-title">NODE DETAILS</div>
-<div id="sidebar-content"></div>
-</div>
-</div>
-</div>
-<!-- === SHADOW ASSETS TAB === -->
-<div class="tab-view" id="view-shadow-assets">
-<div class="shadow-expanded">
-<div class="shadow-left">
-<div class="panel panel-shadow">
-<div class="panel-header"><svg width="12" height="12" viewBox="0 0 12 12"><polygon points="6,0.5 11,3 11,9 6,11.5 1,9 1,3" stroke="#1d9e75" stroke-width="1" fill="none"/><circle cx="6" cy="6" r="1.5" fill="#1d9e75"/></svg><div class="panel-title" style="color:#5dcaa5">DEPLOYED ASSETS</div></div>
-<div id="expanded-asset-list"></div>
-</div>
-<div class="deploy-form">
-<div class="panel-header"><div class="panel-dot" style="background:#1d9e75"></div><div class="panel-title">DEPLOY NEW SHADOW ASSET</div></div>
-<div class="form-group"><label class="form-label">ASSET TYPE</label><select class="form-select" id="deploy-type"><option value="Honeypot">Honeypot</option><option value="Sinkhole">Sinkhole</option><option value="Decoy">Decoy</option></select></div>
-<div class="form-group"><label class="form-label">TARGET LOCATION</label><select class="form-select" id="deploy-location"><option>Nairobi</option><option>Mombasa</option><option>Kisumu</option><option>Nakuru</option><option>Eldoret</option></select></div>
-<div class="form-group"><label class="form-label">DESCRIPTION</label><input class="form-input" id="deploy-desc" type="text" placeholder="e.g. Fake banking portal"></div>
-<div class="form-group"><label class="form-label">PORT / ENDPOINT</label><input class="form-input" id="deploy-port" type="text" placeholder="e.g. :443 / /api/v1"></div>
-<button class="btn-deploy" id="btn-deploy" tabindex="0">DEPLOY SHADOW ASSET</button>
-</div>
-</div>
-<div class="shadow-right">
-<div class="panel" style="flex:1">
-<div class="panel-header"><div class="panel-dot" style="background:#ef9f27"></div><div class="panel-title">ASSET EVENT LOG</div></div>
-<div id="asset-log-list" style="overflow-y:auto;max-height:calc(100vh - 200px)"></div>
-</div>
-</div>
-</div>
-</div>
-<!-- === GRC REPORTS TAB === -->
-<div class="tab-view" id="view-grc-reports">
-<div class="grc-layout">
-<div class="grc-left">
-<button class="btn-generate" id="btn-gen-report" tabindex="0">GENERATE NEW REPORT</button>
-<div id="report-list"></div>
-</div>
-<div class="grc-right" id="report-preview"><div style="color:#344d5e;font:400 11px var(--font-display);text-align:center;padding-top:40px">Select a report to preview</div></div>
-</div>
-</div>
-<!-- === INTEL FEED TAB === -->
-<div class="tab-view" id="view-intel-feed">
-<div class="feed-view-container">
-<div class="filter-bar">
-<div class="filter-pill active" data-filter="all" tabindex="0">All</div>
-<div class="filter-pill" data-filter="critical" tabindex="0">Critical</div>
-<div class="filter-pill" data-filter="warning" tabindex="0">High</div>
-<div class="filter-pill" data-filter="info" tabindex="0">Medium</div>
-<div class="filter-pill" data-filter="low" tabindex="0">Low</div>
-<input type="text" class="search-input" id="feed-search" placeholder="Search events...">
-</div>
-<div class="full-feed" id="full-feed-list"></div>
-<div class="scroll-indicator" id="scroll-indicator">PAUSED — click to resume</div>
-</div>
-</div>
-</div>
-<!-- MODAL -->
-<div class="modal-overlay" id="alert-modal"><div class="modal-box"><button class="modal-close" id="modal-close" aria-label="Close modal" tabindex="0">✕</button><div class="modal-title" id="modal-title">ALERT DETAIL</div><div id="modal-body"></div><div class="modal-actions" id="modal-actions"></div></div></div>
-<!-- STATUSBAR -->
-<footer class="statusbar">
-<div class="status-item"><span class="status-label">ELK PIPELINE</span><span class="status-value" id="status-elk" style="color:#1d9e75">HEALTHY</span></div>
-<div class="status-item"><span class="status-label">SURICATA RULES</span><span class="status-value" id="status-rules" style="color:#5dcaa5">1,247</span></div>
-<div class="status-item"><span class="status-label">UPTIME</span><span class="status-value" id="status-uptime" style="color:#5dcaa5">14:33:00</span></div>
-<div class="status-right">
-<div class="status-item"><span class="status-label">KE-CERT SYNC</span><span class="status-value" id="status-kecert" style="color:#1d9e75">LIVE</span></div>
-<div class="status-item"><span class="status-label">NODE</span><span class="status-value" id="status-node" style="color:#5dcaa5">NAIROBI-01</span></div>
-</div>
-</footer>
-</div>
-<!-- JAVASCRIPT PLACEHOLDER -->
-<script>
-// === CONSTANTS ===
-const COLORS = {
-  CRITICAL:'#e24b4a',CRITICAL_LIGHT:'#f09595',HIGH:'#ef9f27',HIGH_LIGHT:'#fac775',
-  MEDIUM:'#378add',MEDIUM_LIGHT:'#85b7eb',LOW:'#1d9e75',LOW_LIGHT:'#5dcaa5',
-  PURPLE:'#534ab7',PURPLE_LIGHT:'#afa9ec',BORDER:'#1a2d42',BG_DARK:'#050c14',
-  TEXT_MUTED:'#344d5e',TEXT_SEC:'#7a9fb0',TEXT_MONO:'#c8dfe8',GREEN:'#1d9e75'
-};
-const TIMING = {
-  THREAT_MIN:3000,THREAT_MAX:6000,TRAP_MIN:8000,TRAP_MAX:15000,
-  FEED_MIN:6000,FEED_MAX:14000,ALERT_MIN:15000,ALERT_MAX:25000,
-  CHART:30000,RULES:45000,ELK_MIN:180000,ELK_MAX:300000
-};
-const FEED_POOL = [
-  {sev:'critical',msg:'XSS payload detected — eCitizen registration form, IP: 41.89.XX.XX'},
-  {sev:'warning',msg:'Honeypot HP-01 triggered — Nairobi, attacker profiled, 12 requests logged'},
-  {sev:'critical',msg:'Directory traversal attempt — KRA portal, blocked by WAF rule KE-0089'},
-  {sev:'info',msg:'Recon sweep detected — 189 IPs probed across Mombasa range'},
-  {sev:'warning',msg:'C2 beacon — malware calling back to sinkholed domain, traffic redirected'},
-  {sev:'critical',msg:'Credential stuffing — 2,400 login attempts on NTSA portal in 90 seconds'},
-  {sev:'info',msg:'New attacker IP fingerprinted — TOR exit node, added to blocklist'},
-  {sev:'warning',msg:'Decoy DC-05 interaction — M-Pesa API endpoint probed, session captured'},
-  {sev:'critical',msg:'Ransomware C2 contact attempt — county server blocked at perimeter'},
-  {sev:'info',msg:'GRC report generated — Kenya DPA 2019 compliance score: 87%'}
-];
-const ALERT_POOL = [
-  {sev:COLORS.CRITICAL,target:'KRA Portal',type:'XSS',typeBg:'#0a1b2d',typeCol:'#85b7eb',typeBorder:'#185fa5',status:'BLOCKED',statusCol:COLORS.GREEN},
-  {sev:COLORS.HIGH,target:'NTSA Portal',type:'CRED',typeBg:'#1e1600',typeCol:'#fac775',typeBorder:'#ef9f27',status:'MONITORING',statusCol:COLORS.HIGH},
-  {sev:COLORS.CRITICAL,target:'M-Pesa GW',type:'SQLi',typeBg:'#0a1b2d',typeCol:'#85b7eb',typeBorder:'#185fa5',status:'BLOCKED',statusCol:COLORS.GREEN},
-  {sev:COLORS.MEDIUM,target:'Safaricom',type:'RECON',typeBg:'#0a1e13',typeCol:'#5dcaa5',typeBorder:COLORS.GREEN,status:'LOGGED',statusCol:COLORS.GREEN},
-  {sev:COLORS.HIGH,target:'CBK Systems',type:'BF',typeBg:'#1e1600',typeCol:'#fac775',typeBorder:'#ef9f27',status:'TRAPPED',statusCol:COLORS.GREEN},
-  {sev:COLORS.CRITICAL,target:'IEBC Portal',type:'C2',typeBg:'#0a1b2d',typeCol:'#85b7eb',typeBorder:'#185fa5',status:'SINKHOLED',statusCol:COLORS.HIGH}
-];
-const SEV_MAP = {critical:COLORS.CRITICAL,warning:COLORS.HIGH,info:COLORS.MEDIUM,low:COLORS.LOW};
-const CITIES = [
-  {id:'nairobi',name:'Nairobi',sev:'critical',attack:'SQL Injection',target:'e-Citizen Portal',x:0.52,y:0.50,rippleColor:COLORS.CRITICAL,labelColor:COLORS.CRITICAL_LIGHT,radii:[18,8,4],opacities:[0.08,0.18,1]},
-  {id:'mombasa',name:'Mombasa',sev:'high',attack:'Port Scan',target:'KPA Systems',x:0.62,y:0.68,rippleColor:COLORS.HIGH,labelColor:COLORS.HIGH_LIGHT,radii:[14,6,3],opacities:[0.12,0.3,1]},
-  {id:'kisumu',name:'Kisumu',sev:'medium',attack:'Brute Force',target:'County Systems',x:0.35,y:0.48,rippleColor:COLORS.MEDIUM,labelColor:COLORS.MEDIUM_LIGHT,radii:[11,5,2.5],opacities:[0.12,0.3,1]},
-  {id:'nakuru',name:'Nakuru',sev:'low',attack:'Recon',target:'Private SME',x:0.47,y:0.40,rippleColor:COLORS.GREEN,labelColor:COLORS.LOW_LIGHT,radii:[8,3.5,2],opacities:[0.15,0.4,1]},
-  {id:'eldoret',name:'Eldoret',sev:'medium',attack:'Malware C2',target:'University Network',x:0.38,y:0.32,rippleColor:COLORS.HIGH,labelColor:COLORS.HIGH_LIGHT,radii:[10,4,2],opacities:[0.1,0.3,1]},
-  {id:'garissa',name:'Garissa',sev:'low',attack:'Recon',target:'Public Sector',x:0.70,y:0.35,rippleColor:COLORS.GREEN,labelColor:COLORS.LOW_LIGHT,radii:[7,3,2],opacities:[0.15,0.4,1]}
-];
-// Kenya outline approximate polygon (normalized 0-1)
-const KENYA_OUTLINE = '0.35,0.10 0.65,0.10 0.72,0.18 0.78,0.28 0.80,0.40 0.75,0.55 0.68,0.65 0.62,0.75 0.55,0.85 0.48,0.90 0.40,0.82 0.35,0.70 0.30,0.55 0.28,0.42 0.30,0.28 0.32,0.18';
 
-// === STATE ===
-const state = {
-  threatsCount:247, trappedCount:84, shadowActive:[true,true,false,true],
-  healthPct:98, uptimeSeconds:0, suricataRules:1247,
-  chartData:[42,65,38,91,74,88,55,112,96,130,147,160,247],
-  feedEvents:[], allFeedEvents:[], alertsList:[], assetLogs:[],
-  selectedNode:null, activeTab:'overview', feedPaused:false,
-  hourlyDelta:18, trappedDelta:5,
-  reports:[
-    {title:'Kenya DPA 2019 — Q2 2025',status:'COMPLIANT',score:'87%',date:'2025-06-30'},
-    {title:'ISO 27001 Gap Analysis',status:'IN PROGRESS',score:'73%',date:'2025-06-15'},
-    {title:'KE-CERT Incident Report #INC-2025-041',status:'CLOSED',score:'N/A',date:'2025-05-28'}
-  ],
-  selectedReport:0, deployedAssets:[]
-};
-const assets = [
-  {id:'asset-hp01',type:'honeypot',name:'Honeypot HP-01',detail:'Nairobi — fake GOK portal · 3 sessions active',iconBg:'#091a0f',iconBorder:'#0f6e56',iconColor:COLORS.GREEN},
-  {id:'asset-sk02',type:'sinkhole',name:'Sinkhole SK-02',detail:'Routing 12 C2 domains to null',iconBg:'#091424',iconBorder:'#185fa5',iconColor:COLORS.MEDIUM},
-  {id:'asset-dc05',type:'decoy',name:'Decoy DC-05',detail:'Fake M-Pesa API endpoint · idle',iconBg:'#170e22',iconBorder:COLORS.PURPLE,iconColor:COLORS.PURPLE},
-  {id:'asset-hp04',type:'honeypot',name:'Honeypot HP-04',detail:'Mombasa — fake KPA admin panel',iconBg:'#091a0f',iconBorder:'#0f6e56',iconColor:COLORS.GREEN}
-];
-const initialAlerts = [
-  {sev:COLORS.CRITICAL,target:'e-Citizen',type:'SQLi',typeBg:'#0a1b2d',typeCol:'#85b7eb',typeBorder:'#185fa5',time:'14:32',status:'BLOCKED',statusCol:COLORS.GREEN,attack:'SQL Injection',ip:'41.89.112.47',rule:'EK-0041'},
-  {sev:COLORS.HIGH,target:'KPA Portal',type:'SCAN',typeBg:'#1e1600',typeCol:'#fac775',typeBorder:'#ef9f27',time:'14:31',status:'MONITORING',statusCol:COLORS.HIGH,attack:'Port Scan',ip:'103.25.XX.XX',rule:'KE-0055'},
-  {sev:COLORS.HIGH,target:'Kisumu Cty',type:'BF',typeBg:'#1e1600',typeCol:'#fac775',typeBorder:'#ef9f27',time:'14:29',status:'TRAPPED',statusCol:COLORS.GREEN,attack:'Brute Force',ip:'185.220.XX.XX',rule:'BF-0012'},
-  {sev:COLORS.MEDIUM,target:'UoE Network',type:'C2',typeBg:'#0a1b2d',typeCol:'#85b7eb',typeBorder:'#185fa5',time:'14:27',status:'SINKHOLED',statusCol:COLORS.HIGH,attack:'Malware C2',ip:'45.33.XX.XX',rule:'C2-0003'},
-  {sev:COLORS.GREEN,target:'Nakuru SME',type:'RECON',typeBg:'#0a1e13',typeCol:'#5dcaa5',typeBorder:COLORS.GREEN,time:'14:21',status:'LOGGED',statusCol:COLORS.GREEN,attack:'Recon',ip:'198.51.XX.XX',rule:'REC-0020'}
-];
+  <!-- NAVBAR -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <span class="nav-logo-text">Kivuli</span>
+      </a>
+      <div class="nav-desktop">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#how-it-works" class="nav-link">How It Works</a>
+        <a href="#tech" class="nav-link">Tech</a>
+        <a href="/dashboard" class="nav-cta">Launch Dashboard</a>
+      </div>
+      <button class="nav-mobile-btn" id="mobile-toggle" aria-label="Toggle menu">&#9776;</button>
+    </div>
+    <div class="nav-mobile-menu" id="mobile-menu">
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#how-it-works" class="nav-link">How It Works</a>
+      <a href="#tech" class="nav-link">Tech</a>
+      <a href="/dashboard" class="nav-cta" style="text-align:center;margin-top:8px;">Launch Dashboard</a>
+    </div>
+  </nav>
 
-// === DOM HELPERS ===
-const $ = id => document.getElementById(id);
-const randInt = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
-const randTimeout = (fn,min,max) => { const run = () => { fn(); setTimeout(run, randInt(min,max)); }; setTimeout(run, randInt(min,max)); };
-const timeNow = () => { const d=new Date(); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
-const formatUptime = s => { const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60; return `${String(14+h).padStart(2,'0')}:${String(33+m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; };
+  <!-- HERO SECTION -->
+  <section id="hero">
+    <div class="hero-mesh"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+    <div class="hero-content">
+      <div class="hero-badge anim-fi">
+        <div class="pulse-dot"><div class="pulse-dot-inner" style="background:var(--primary)"></div><div class="pulse-dot-ping" style="background:var(--primary)"></div></div>
+        Systems Online — v2.0
+      </div>
+      <h1 class="hero-h1 anim-fiu-1">Your Mission Control for <span class="text-gradient">Africa's Digital Future</span></h1>
+      <p class="hero-sub anim-fiu-2">Unify, control, and streamline your entire infrastructure from a single, powerful command dashboard.</p>
+      <div class="hero-ctas anim-fiu-3">
+        <a href="/dashboard" class="btn-primary">Launch Dashboard <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+        <a href="#features" class="btn-secondary">✦ Explore Features</a>
+      </div>
+      <div class="hero-stats anim-fiu-4" id="stats-container">
+        <div class="stat-item"><div class="stat-value"><span id="stat-users">0</span><span class="stat-suffix">+</span></div><div class="stat-label">Active Users</div></div>
+        <div class="stat-item"><div class="stat-value"><span id="stat-uptime">0</span><span class="stat-suffix">%</span></div><div class="stat-label">Uptime</div></div>
+        <div class="stat-item"><div class="stat-value"><span id="stat-nodes">0</span><span class="stat-suffix"></span></div><div class="stat-label">Nodes Active</div></div>
+      </div>
+      <!-- Threat Map -->
+      <div class="map-wrapper anim-fiu-5">
+        <div class="map-outer-glow"></div>
+        <div class="map-ambient"></div>
+        <div class="map-container" id="map-container">
+          <canvas id="threat-canvas"></canvas>
+          <div class="map-crt"></div>
+          <div class="map-header">
+            <div class="map-header-left">
+              <div class="pulse-dot"><div class="pulse-dot-inner" style="background:var(--amber)"></div><div class="pulse-dot-ping" style="background:var(--amber)"></div></div>
+              <span class="map-header-label">Kivuli East Africa Grid</span>
+            </div>
+            <div class="map-header-right">
+              <span class="map-badge map-badge-red">GLOBAL INBOUND: <span id="cnt-incoming" style="color:#ff5555;font-weight:700">0</span></span>
+              <span class="map-badge map-badge-amber">LOCAL THREATS: <span id="cnt-local" style="color:#ffc832;font-weight:700">0</span></span>
+              <span class="map-badge map-badge-green">BLOCKED: <span id="cnt-blocked" style="color:#10b981;font-weight:700">0</span></span>
+            </div>
+          </div>
+          <div class="map-feed" id="map-feed">
+            <div class="map-feed-header"><span>Live Intercept Feed <span style="width:4px;height:4px;background:var(--primary);border-radius:50%;display:inline-block;animation:pulse 2s infinite"></span></span></div>
+            <div class="map-feed-list" id="feed-list"></div>
+          </div>
+          <div class="map-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#ff3355;box-shadow:0 0 5px #ff3355"></div><span class="legend-label">Critical</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ff6644;box-shadow:0 0 5px #ff6644"></div><span class="legend-label">High</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#ffaa22;box-shadow:0 0 5px #ffaa22"></div><span class="legend-label">Medium</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:#44ddcc;box-shadow:0 0 5px #44ddcc"></div><span class="legend-label">Low</span></div>
+          </div>
+          <div class="map-reflection"></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-function createAssetIcon(type, color) {
-  if(type==='honeypot') return `<svg width="14" height="14" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6" stroke="${color}" stroke-width="0.8" fill="none"/><circle cx="7" cy="7" r="3.5" stroke="${color}" stroke-width="0.6" fill="none"/><circle cx="7" cy="7" r="1" fill="${color}"/></svg>`;
-  if(type==='sinkhole') return `<svg width="14" height="14" viewBox="0 0 14 14"><line x1="7" y1="1" x2="7" y2="13" stroke="${color}" stroke-width="1.2"/><line x1="1" y1="7" x2="13" y2="7" stroke="${color}" stroke-width="1.2"/></svg>`;
-  return `<svg width="14" height="14" viewBox="0 0 14 14"><polygon points="7,0.5 13,3.5 13,10.5 7,13.5 1,10.5 1,3.5" stroke="${color}" stroke-width="0.8" fill="none"/></svg>`;
-}
+  <!-- COMMAND CENTER DASHBOARD -->
+  <section id="command-dashboard">
+    <div class="dash-bg-radial"></div>
+    <div class="dash-bg-grid"></div>
+    <div class="dash-inner">
+      <div class="dash-row dash-row-1">
+        <div class="panel" style="height:350px" id="telemetry-panel">
+          <div class="panel-header">
+            <span class="panel-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>24H Telemetry Volume</span>
+            <div class="telem-legend">
+              <div class="telem-legend-item"><div class="telem-legend-dot" style="background:#f59e0b"></div>TOTAL SCANS</div>
+              <div class="telem-legend-item"><div class="telem-legend-dot" style="background:#ef4444"></div>BLOCKED</div>
+            </div>
+          </div>
+          <div class="telemetry-body"><canvas id="telemetry-canvas"></canvas></div>
+        </div>
+        <div class="panel" style="height:350px" id="intercept-panel">
+          <div class="panel-header">
+            <span class="panel-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="22" y1="12" x2="18" y2="12"/><line x1="6" y1="12" x2="2" y2="12"/><line x1="12" y1="6" x2="12" y2="2"/><line x1="12" y1="22" x2="12" y2="18"/></svg>Active Intercept HUD</span>
+            <span class="panel-badge" id="secured-badge" style="display:none;background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.3);animation:pulse 2s infinite">SECURED</span>
+          </div>
+          <div class="intercept-body" id="intercept-body">
+            <div class="intercept-standby" id="intercept-standby">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <p>STANDBY. MONITORING GRID...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dash-row dash-row-2">
+        <div class="panel" style="height:450px">
+          <div class="panel-header">
+            <span class="panel-title"><div class="terminal-pulse"></div>Gateway Security Terminal</span>
+            <span class="terminal-prompt">kivuli@root:~#</span>
+          </div>
+          <div class="terminal-body" id="terminal-body"></div>
+        </div>
+        <div class="panel" style="height:450px">
+          <div class="panel-header">
+            <span class="panel-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Regional Infrastructure</span>
+            <span class="panel-badge" style="background:rgba(255,50,50,0.2);color:var(--primary);border:1px solid rgba(255,50,50,0.3)">SECURE</span>
+          </div>
+          <div class="nodes-grid" id="nodes-grid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-// === RENDER FUNCTIONS ===
-function renderMap(svgId, containerEl) {
-  const svg = $(svgId);
-  if(!svg || !containerEl) return;
-  const w = containerEl.clientWidth || 500;
-  const h = containerEl.clientHeight || 220;
-  // Grid
-  let gridLines = '';
-  for(let x=40;x<w;x+=40) gridLines += `<line x1="${x}" y1="0" x2="${x}" y2="${h}" stroke="#0f2030" stroke-width="0.5" opacity="0.6"/>`;
-  for(let y=40;y<h;y+=40) gridLines += `<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="#0f2030" stroke-width="0.5" opacity="0.6"/>`;
-  // Kenya outline
-  const kenyaPts = KENYA_OUTLINE.split(' ').map(p => { const[px,py]=p.split(','); return `${px*w},${py*h}`; }).join(' ');
-  // Attack lines
-  const nbi = CITIES[0]; const msa = CITIES[1];
-  let defs = `<defs><style>@keyframes rippleAnim{0%{r:0;opacity:0.4}100%{r:20;opacity:0}}</style></defs>`;
-  // City nodes with ripples
-  let nodes = '';
-  CITIES.forEach((c,i) => {
-    const cx=c.x*w, cy=c.y*h;
-    c.radii.forEach((r,ri) => {
-      if(ri===0) nodes += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${c.rippleColor}" opacity="${c.opacities[ri]}"><animate attributeName="r" values="${r};${r+6};${r}" dur="2s" begin="${i*0.4}s" repeatCount="indefinite"/><animate attributeName="opacity" values="${c.opacities[ri]};0;${c.opacities[ri]}" dur="2s" begin="${i*0.4}s" repeatCount="indefinite"/></circle>`;
-      else nodes += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${c.rippleColor}" opacity="${c.opacities[ri]}"/>`;
-    });
-    nodes += `<text x="${cx}" y="${cy-c.radii[0]-4}" fill="${c.labelColor}" font-family="'JetBrains Mono',monospace" font-size="8" text-anchor="middle">${c.name}</text>`;
-  });
-  svg.innerHTML = defs + gridLines +
-    `<polyline points="${kenyaPts}" stroke="#0f4a30" stroke-width="1" fill="none" opacity="0.3"/>` +
-    `<line x1="0" y1="${0.75*h}" x2="${nbi.x*w}" y2="${nbi.y*h}" stroke="${COLORS.CRITICAL}" stroke-width="0.5" opacity="0.3" stroke-dasharray="4,3"/>` +
-    `<text x="4" y="${0.75*h-4}" fill="#6a1a1a" font-family="'JetBrains Mono',monospace" font-size="7">RU-ORIGIN</text>` +
-    `<line x1="${w}" y1="${0.15*h}" x2="${msa.x*w}" y2="${msa.y*h}" stroke="${COLORS.HIGH}" stroke-width="0.5" opacity="0.25" stroke-dasharray="4,3"/>` +
-    `<text x="${w-52}" y="${0.15*h-4}" fill="#3a2a00" font-family="'JetBrains Mono',monospace" font-size="7">CN-ORIGIN</text>` +
-    nodes;
-  // Click handlers on SVG
-  svg.onclick = (e) => {
-    const rect = svg.getBoundingClientRect();
-    const mx=(e.clientX-rect.left)/w, my=(e.clientY-rect.top)/h;
-    let closest = null, minDist = 0.05;
-    CITIES.forEach(c => { const d=Math.hypot(c.x-mx,c.y-my); if(d<minDist){minDist=d;closest=c;} });
-    if(closest) selectNode(closest);
-  };
-}
+  <!-- FOOTER CTA -->
+  <section id="footer-cta">
+    <div class="hero-mesh"></div>
+    <div class="cta-glow"></div>
+    <div style="position:relative;z-index:10;max-width:1400px;margin:0 auto;padding:0 2rem">
+      <h2 class="cta-heading reveal">Ready to Take <span class="text-gradient">Command</span>?</h2>
+      <p class="cta-sub reveal reveal-d1">Join thousands of operators already managing infrastructure across Africa.</p>
+      <div class="reveal reveal-d2">
+        <a href="/dashboard" class="btn-primary cta-btn">Get Started Free <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+      </div>
+    </div>
+  </section>
 
-function selectNode(node) {
-  state.selectedNode = (state.selectedNode && state.selectedNode.id===node.id) ? null : node;
-  const bar = $('node-detail-bar');
-  if(state.selectedNode) {
-    const sevLabel = node.sev.toUpperCase();
-    const sevCol = node.sev==='critical'?COLORS.CRITICAL:node.sev==='high'?COLORS.HIGH:node.sev==='medium'?COLORS.MEDIUM:COLORS.GREEN;
-    bar.innerHTML = `<span style="color:${sevCol};font-weight:600">${sevLabel}</span> — ${node.name} · ${node.attack} · Target: ${node.target}`;
-    bar.style.display = 'block';
-    bar.style.borderLeftColor = sevCol;
-    bar.style.borderLeft = `2px solid ${sevCol}`;
-  } else { bar.style.display='none'; }
-  updateNodeSidebar(state.selectedNode || CITIES[0]);
-}
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <div class="footer-logo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <span class="footer-logo-text">Kivuli Command Centre</span>
+      </div>
+      <p class="footer-copy">© 2026 Kivuli Command Centre. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="https://lovable.dev/projects/3940f0a0-9a42-4a56-bcf7-1b875491f991" target="_blank" rel="noopener noreferrer" class="footer-link">Documentation</a>
+        <a href="https://github.com/Razinger-Joe/kivuli-command-center" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
+      </div>
+    </div>
+  </footer>
 
-function updateNodeSidebar(node) {
-  const sb = $('sidebar-content');
-  if(!sb) return;
-  const sevCol = node.sev==='critical'?COLORS.CRITICAL:node.sev==='high'?COLORS.HIGH:node.sev==='medium'?COLORS.MEDIUM:COLORS.GREEN;
-  const events = state.allFeedEvents.filter(e=>e.msg.toLowerCase().includes(node.name.toLowerCase())).slice(0,5);
-  sb.innerHTML = `
-    <div class="sidebar-field"><strong>CITY</strong>${node.name}</div>
-    <div class="sidebar-field"><strong>SEVERITY</strong><span style="color:${sevCol}">${node.sev.toUpperCase()}</span></div>
-    <div class="sidebar-field"><strong>ATTACK TYPE</strong>${node.attack}</div>
-    <div class="sidebar-field"><strong>TARGET</strong>${node.target}</div>
-    <div class="sidebar-field"><strong>COORDINATES</strong>LAT ${(node.y*2-0.5).toFixed(2)}°S  LON ${(node.x*40+16).toFixed(2)}°E</div>
-    <div class="sidebar-field"><strong>ACTIVE THREATS</strong>${randInt(3,28)}</div>
-    <div class="sidebar-events"><strong style="font:600 9px var(--font-display);color:var(--text-muted);letter-spacing:.08em">RECENT EVENTS</strong>
-    ${events.length?events.map(e=>`<div class="sidebar-event">${e.time} — ${e.msg.substring(0,60)}...</div>`).join(''):'<div class="sidebar-event" style="color:#2e4a60">No recent events</div>'}
-    </div>`;
-}
+  <!-- CDN SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 
-function renderAssets(containerId) {
-  const el = $(containerId);
-  if(!el) return;
-  el.innerHTML = '';
-  assets.concat(state.deployedAssets).forEach((a,i) => {
-    const isOn = i < 4 ? state.shadowActive[i] : true;
-    const item = document.createElement('div');
-    item.className = 'asset-item';
-    item.innerHTML = `
-      <div class="asset-icon" style="background:${a.iconBg};border:1px solid ${a.iconBorder}">${createAssetIcon(a.type,a.iconColor)}</div>
-      <div class="asset-info"><div class="asset-name">${a.name}</div><div class="asset-detail" id="detail-${a.id}">${a.detail}</div></div>
-      <div class="asset-toggle-area">
-        <span class="toggle-label ${isOn?'on':''}">${isOn?'ON':'OFF'}</span>
-        <div class="toggle ${isOn?'active':''}" role="switch" aria-checked="${isOn}" aria-label="Toggle ${a.name}" tabindex="0" data-index="${i}"><div class="toggle-knob"></div></div>
-      </div>`;
-    item.querySelector('.toggle').addEventListener('click', (e) => { e.stopPropagation(); toggleAsset(i); });
-    item.querySelector('.toggle').addEventListener('keydown', (e) => { if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleAsset(i);} });
-    item.addEventListener('click', () => toggleAsset(i));
-    el.appendChild(item);
-  });
-}
+  <script>
+  (function() {
+  'use strict';
 
-function toggleAsset(idx) {
-  if(idx < 4) {
-    state.shadowActive[idx] = !state.shadowActive[idx];
-    const a = assets[idx];
-    const isOn = state.shadowActive[idx];
-    if(isOn) { addFeedEvent(idx===2?'info':'warning', `${a.name} activated — now monitoring`); }
-    else { addFeedEvent('warning', `WARNING — ${a.name} taken offline`); }
-    if(idx===2) {
-      const detEl = document.querySelectorAll(`[id="detail-${a.id}"]`);
-      detEl.forEach(d => d.textContent = isOn ? 'Fake M-Pesa API endpoint · ACTIVE' : 'Fake M-Pesa API endpoint · idle');
-    }
-  }
-  updateShadowMetric();
-  renderAssets('shadow-asset-list');
-  renderAssets('expanded-asset-list');
-}
-
-function updateShadowMetric() {
-  const active = state.shadowActive.filter(Boolean).length + state.deployedAssets.length;
-  $('metric-shadows').textContent = active + state.deployedAssets.length;
-  $('metric-shadows-delta').textContent = `${state.shadowActive.filter(Boolean).length} honeypots active`;
-}
-
-function renderChart() {
-  const container = $('chart-container');
-  if(!container) return;
-  const max = Math.max(...state.chartData, 1);
-  container.innerHTML = '';
-  state.chartData.forEach((v,i) => {
-    const bar = document.createElement('div');
-    bar.className = 'chart-bar' + (i===state.chartData.length-1?' current':'');
-    bar.style.height = (v/max*100)+'%';
-    container.appendChild(bar);
-  });
-}
-
-function renderAlerts() {
-  const tbody = $('alerts-tbody');
-  if(!tbody) return;
-  tbody.innerHTML = '';
-  state.alertsList.slice(0,8).forEach((a,i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td><span class="sev-dot" style="background:${a.sev}"></span></td><td>${a.target}</td><td><span class="type-badge" style="background:${a.typeBg};color:${a.typeCol};border:.5px solid ${a.typeBorder}">${a.type}</span></td><td>${a.time}</td><td style="color:${a.statusCol}">${a.status}</td>`;
-    tr.addEventListener('click', () => showAlertModal(a));
-    tbody.appendChild(tr);
-  });
-}
-
-function renderFeed(containerId, items, maxItems) {
-  const el = $(containerId);
-  if(!el) return;
-  el.innerHTML = '';
-  items.slice(0, maxItems||6).forEach(e => {
-    const div = document.createElement('div');
-    div.className = 'feed-item';
-    div.style.borderLeft = `2px solid ${SEV_MAP[e.sev]||COLORS.MEDIUM}`;
-    div.innerHTML = `<span class="feed-time">${e.time}</span><span class="feed-dot" style="background:${SEV_MAP[e.sev]||COLORS.MEDIUM}"></span><span class="feed-msg">${e.msg}</span>`;
-    el.appendChild(div);
-  });
-}
-
-function renderFullFeed() {
-  const el = $('full-feed-list');
-  if(!el) return;
-  const filter = document.querySelector('.filter-pill.active')?.dataset.filter || 'all';
-  const search = ($('feed-search')?.value || '').toLowerCase();
-  let items = state.allFeedEvents;
-  if(filter !== 'all') items = items.filter(e => e.sev === filter);
-  if(search) items = items.filter(e => e.msg.toLowerCase().includes(search));
-  el.innerHTML = '';
-  items.forEach(e => {
-    const div = document.createElement('div');
-    div.className = 'feed-item';
-    div.style.borderLeft = `2px solid ${SEV_MAP[e.sev]||COLORS.MEDIUM}`;
-    div.innerHTML = `<span class="feed-time">${e.time}</span><span class="feed-dot" style="background:${SEV_MAP[e.sev]||COLORS.MEDIUM}"></span><span class="feed-msg">${e.msg}</span>`;
-    el.appendChild(div);
-  });
-}
-
-function renderReports() {
-  const el = $('report-list');
-  if(!el) return;
-  el.innerHTML = '';
-  state.reports.forEach((r,i) => {
-    const card = document.createElement('div');
-    card.className = 'report-card' + (i===state.selectedReport?' selected':'');
-    const scoreCol = r.score==='N/A'?COLORS.TEXT_SEC:parseInt(r.score)>=80?COLORS.GREEN:parseInt(r.score)>=60?COLORS.HIGH:COLORS.CRITICAL;
-    card.innerHTML = `<div class="report-card-title">${r.title}</div><div class="report-card-meta"><span style="color:${r.status==='COMPLIANT'?COLORS.GREEN:r.status==='CLOSED'?COLORS.TEXT_SEC:COLORS.HIGH}">${r.status}</span><span class="report-score" style="color:${scoreCol}">${r.score}</span><span>${r.date}</span></div>`;
-    card.addEventListener('click', () => { state.selectedReport = i; renderReports(); renderReportPreview(i); });
-    el.appendChild(card);
-  });
-}
-
-function renderReportPreview(idx) {
-  const el = $('report-preview');
-  const r = state.reports[idx];
-  if(!el || !r) return;
-  el.innerHTML = `
-    <div class="grc-section"><h3>EXECUTIVE SUMMARY</h3><p>This report presents the compliance status and threat landscape assessment for the reporting period ending ${r.date}. Overall compliance score: <strong style="color:${COLORS.GREEN}">${r.score}</strong>. Status: <strong>${r.status}</strong>.</p></div>
-    <div class="grc-section"><h3>THREAT OVERVIEW</h3><p>During this period, ${state.threatsCount} active threats were detected across the national infrastructure. ${state.trappedCount} threats were successfully trapped using shadow assets deployed across Nairobi, Mombasa, Kisumu, and Nakuru nodes.</p><p>Primary attack vectors: SQL Injection (34%), Brute Force (22%), Malware C2 (18%), Port Scanning (15%), Credential Stuffing (11%).</p></div>
-    <div class="grc-section"><h3>COMPLIANCE CHECKLIST — KENYA DPA 2019</h3><ul class="grc-checklist">
-      <li><span class="check-icon check-pass">✓</span> Section 25: Data processing principles</li>
-      <li><span class="check-icon check-pass">✓</span> Section 26: Lawful processing</li>
-      <li><span class="check-icon check-pass">✓</span> Section 27: Consent requirements</li>
-      <li><span class="check-icon check-pass">✓</span> Section 28: Rights of data subjects</li>
-      <li><span class="check-icon check-fail">✗</span> Section 41: Cross-border data transfer — pending review</li>
-      <li><span class="check-icon check-pass">✓</span> Section 43: Data breach notification</li>
-      <li><span class="check-icon check-pass">✓</span> Section 46: Data protection impact assessment</li>
-    </ul></div>
-    <div class="grc-section"><h3>RECOMMENDATIONS</h3><p>1. Complete cross-border data transfer audit per Section 41 DPA 2019.</p><p>2. Deploy additional honeypots in Mombasa and Garissa nodes.</p><p>3. Update Suricata rules for emerging C2 patterns from East Africa region.</p><p>4. Schedule quarterly penetration testing for all GOK-facing portals.</p></div>
-    <div class="grc-section"><h3>INCIDENT TIMELINE</h3><p style="font:400 10px var(--font-code);color:var(--text-muted)">14:32 — SQL Injection blocked on e-Citizen portal<br>14:31 — Honeypot HP-04 triggered at Mombasa node<br>14:29 — Port scan detected on Kisumu county<br>14:27 — Brute force attack on Eldoret university<br>14:21 — Recon activity logged at Nakuru</p></div>`;
-}
-
-function renderAssetLog() {
-  const el = $('asset-log-list');
-  if(!el) return;
-  el.innerHTML = '';
-  state.assetLogs.slice(0,20).forEach(l => {
-    const div = document.createElement('div');
-    div.className = 'asset-log-item';
-    div.innerHTML = `<span class="log-time">${l.time}</span>${l.msg}`;
-    el.appendChild(div);
-  });
-}
-
-function showAlertModal(alert) {
-  const modal = $('alert-modal');
-  const title = $('modal-title');
-  const body = $('modal-body');
-  const actions = $('modal-actions');
-  title.textContent = `ALERT — ${alert.target}`;
-  body.innerHTML = `
-    <div class="modal-field"><strong>SEVERITY:</strong> <span style="color:${alert.sev}">●</span> ${alert.sev===COLORS.CRITICAL?'CRITICAL':alert.sev===COLORS.HIGH?'HIGH':alert.sev===COLORS.MEDIUM?'MEDIUM':'LOW'}</div>
-    <div class="modal-field"><strong>TARGET SYSTEM:</strong> ${alert.target}</div>
-    <div class="modal-field"><strong>ATTACK TYPE:</strong> ${alert.attack||alert.type}</div>
-    <div class="modal-field"><strong>SOURCE IP:</strong> ${alert.ip||('41.89.'+randInt(10,250)+'.'+randInt(10,250))}</div>
-    <div class="modal-field"><strong>TIMESTAMP:</strong> ${alert.time}</div>
-    <div class="modal-field"><strong>SURICATA RULE:</strong> ${alert.rule||'KE-'+String(randInt(1,999)).padStart(4,'0')}</div>
-    <div class="modal-field"><strong>STATUS:</strong> <span style="color:${alert.statusCol}">${alert.status}</span></div>
-    <div class="modal-field"><strong>RECOMMENDED ACTION:</strong> Monitor and analyze captured traffic patterns</div>`;
-  actions.innerHTML = `
-    <button class="modal-btn" style="border-color:${COLORS.GREEN};color:${COLORS.GREEN}" tabindex="0" onclick="closeModal()">Mark Resolved</button>
-    <button class="modal-btn" style="border-color:${COLORS.MEDIUM};color:${COLORS.MEDIUM}" tabindex="0" onclick="closeModal()">Deploy Counter-Asset</button>
-    <button class="modal-btn" style="border-color:${COLORS.HIGH};color:${COLORS.HIGH}" tabindex="0" onclick="closeModal()">Export to GRC</button>`;
-  modal.classList.add('show');
-}
-
-function closeModal() { $('alert-modal').classList.remove('show'); }
-
-// === FEED EVENT SYSTEM ===
-function addFeedEvent(sev, msg) {
-  const evt = { time: timeNow(), sev, msg };
-  state.feedEvents.unshift(evt);
-  state.allFeedEvents.unshift(evt);
-  if(state.feedEvents.length > 6) state.feedEvents.pop();
-  state.assetLogs.unshift({ time: timeNow(), msg });
-  renderFeed('intel-feed-list', state.feedEvents, 6);
-  if(state.activeTab === 'intel-feed' && !state.feedPaused) renderFullFeed();
-  renderAssetLog();
-}
-
-// === SIMULATION ENGINE ===
-function startSimulations() {
-  // Uptime clock — every 1s
-  setInterval(() => {
-    state.uptimeSeconds++;
-    const s = state.uptimeSeconds;
-    const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
-    $('status-uptime').textContent = `${String(14+h).padStart(2,'0')}:${String(33+m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-  }, 1000);
-
-  // Threats count — every 3-6s
-  randTimeout(() => {
-    const inc = randInt(1,4);
-    state.threatsCount += inc;
-    state.hourlyDelta += inc;
-    $('metric-threats').textContent = state.threatsCount;
-    $('metric-threats-delta').textContent = `+${state.hourlyDelta} last hour`;
-    updateThreatBadge();
-  }, TIMING.THREAT_MIN, TIMING.THREAT_MAX);
-
-  // Trapped — every 8-15s
-  randTimeout(() => {
-    if(state.shadowActive.some(Boolean)){
-      state.trappedCount++;
-      state.trappedDelta++;
-      $('metric-trapped').textContent = state.trappedCount;
-      $('metric-trapped-delta').textContent = `+${state.trappedDelta} this session`;
-    }
-  }, TIMING.TRAP_MIN, TIMING.TRAP_MAX);
-
-  // Health fluctuation
-  setInterval(() => {
-    state.healthPct = randInt(96,100);
-    $('metric-health').textContent = state.healthPct+'%';
-    $('metric-health').style.color = state.healthPct < 97 ? COLORS.HIGH : COLORS.MEDIUM;
-    $('metric-health-delta').textContent = state.healthPct < 97 ? 'Degraded performance' : 'All nodes nominal';
-    $('metric-health-delta').style.color = state.healthPct < 97 ? COLORS.HIGH_LIGHT : COLORS.LOW_LIGHT;
-  }, 10000);
-
-  // Intel feed — every 6-14s
-  randTimeout(() => {
-    const evt = FEED_POOL[randInt(0, FEED_POOL.length-1)];
-    addFeedEvent(evt.sev, evt.msg);
-  }, TIMING.FEED_MIN, TIMING.FEED_MAX);
-
-  // Alert rows — every 15-25s
-  randTimeout(() => {
-    const a = {...ALERT_POOL[randInt(0, ALERT_POOL.length-1)], time: timeNow()};
-    state.alertsList.unshift(a);
-    if(state.alertsList.length > 8) state.alertsList.pop();
-    renderAlerts();
-  }, TIMING.ALERT_MIN, TIMING.ALERT_MAX);
-
-  // Chart — every 30s
-  setInterval(() => {
-    state.chartData.shift();
-    state.chartData.push(state.threatsCount);
-    renderChart();
-  }, TIMING.CHART);
-
-  // Suricata rules — every 45s
-  setInterval(() => {
-    state.suricataRules += randInt(1,3);
-    $('status-rules').textContent = state.suricataRules.toLocaleString();
-  }, TIMING.RULES);
-
-  // ELK flicker — every 3-5min
-  randTimeout(() => {
-    $('status-elk').textContent = 'DEGRADED';
-    $('status-elk').style.color = COLORS.HIGH;
-    addFeedEvent('warning', 'ELK pipeline degraded — ingestion delay detected, investigating');
-    setTimeout(() => {
-      $('status-elk').textContent = 'HEALTHY';
-      $('status-elk').style.color = COLORS.GREEN;
-      addFeedEvent('info', 'ELK pipeline restored — all systems nominal');
-    }, 2000);
-  }, TIMING.ELK_MIN, TIMING.ELK_MAX);
-}
-
-function updateThreatBadge() {
-  const badge = $('threat-level-badge');
-  const c = state.threatsCount;
-  badge.className = 'threat-badge';
-  if(c > 500) { badge.textContent = 'THREAT: CRITICAL'; badge.classList.add('critical'); }
-  else if(c > 150) { badge.textContent = 'THREAT: HIGH'; badge.classList.add('high'); }
-  else if(c >= 50) { badge.textContent = 'THREAT: MEDIUM'; badge.classList.add('medium'); }
-  else { badge.textContent = 'THREAT: LOW'; badge.classList.add('low'); }
-}
-
-// === EVENT HANDLERS ===
-function switchTab(tabName) {
-  state.activeTab = tabName;
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab===tabName));
-  document.querySelectorAll('.tab-view').forEach(v => v.classList.toggle('active', v.id===`view-${tabName}`));
-  if(tabName === 'threat-map') {
-    requestAnimationFrame(() => renderMap('expanded-map-svg', $('expanded-map-container')));
-    updateNodeSidebar(state.selectedNode || CITIES[0]);
-  }
-  if(tabName === 'shadow-assets') { renderAssets('expanded-asset-list'); renderAssetLog(); }
-  if(tabName === 'grc-reports') { renderReports(); if(state.reports.length) renderReportPreview(state.selectedReport); }
-  if(tabName === 'intel-feed') renderFullFeed();
-}
-
-// === INIT ===
-function init() {
-  // Initial feed events
-  const initialFeed = [
-    {time:'14:32',sev:'critical',msg:'SQL injection attempt — e-Citizen portal, blocked by Suricata rule EK-0041'},
-    {time:'14:31',sev:'warning',msg:'Honeypot HP-04 triggered — Mombasa node, attacker IP logged to shadow grid'},
-    {time:'14:29',sev:'info',msg:'Port scan detected — Kisumu county network, 47 ports probed'},
-    {time:'14:27',sev:'warning',msg:'Brute force — SSH on Eldoret university server, 340 attempts/min'}
+  // === CONSTANTS & CONFIG ===
+  const CITIES = [
+    { name: "Nairobi", coordinates: [36.8219, -1.2921], region: "East Africa" },
+    { name: "Dar es Salaam", coordinates: [39.2683, -6.7924], region: "East Africa" },
+    { name: "Kigali", coordinates: [30.0619, -1.9441], region: "East Africa" },
+    { name: "Kampala", coordinates: [32.5825, 0.3476], region: "East Africa" },
+    { name: "Lagos", coordinates: [3.3792, 6.5244], region: "Africa" },
+    { name: "Cairo", coordinates: [31.2357, 30.0444], region: "Africa" },
+    { name: "Johannesburg", coordinates: [28.0473, -26.2041], region: "Africa" },
+    { name: "Casablanca", coordinates: [-7.5898, 33.5731], region: "Africa" },
+    { name: "Accra", coordinates: [-0.187, 5.6037], region: "Africa" },
+    { name: "Addis Ababa", coordinates: [38.7578, 8.9806], region: "Africa" },
+    { name: "London", coordinates: [-0.1276, 51.5074], region: "Europe" },
+    { name: "Moscow", coordinates: [37.6173, 55.7558], region: "Europe" },
+    { name: "Berlin", coordinates: [13.405, 52.52], region: "Europe" },
+    { name: "Paris", coordinates: [2.3522, 48.8566], region: "Europe" },
+    { name: "Kyiv", coordinates: [30.5238, 50.4501], region: "Europe" },
+    { name: "New York", coordinates: [-74.006, 40.7128], region: "US" },
+    { name: "San Francisco", coordinates: [-122.4194, 37.7749], region: "US" },
+    { name: "Washington DC", coordinates: [-77.0369, 38.9072], region: "US" },
+    { name: "São Paulo", coordinates: [-46.6333, -23.5505], region: "Americas" },
+    { name: "Beijing", coordinates: [116.4074, 39.9042], region: "Asia" },
+    { name: "Shanghai", coordinates: [121.4737, 31.2304], region: "Asia" },
+    { name: "Tokyo", coordinates: [139.6917, 35.6895], region: "Asia" },
+    { name: "Mumbai", coordinates: [72.8777, 19.076], region: "Asia" },
+    { name: "Singapore", coordinates: [103.8198, 1.3521], region: "Asia" },
+    { name: "Dubai", coordinates: [55.2708, 25.2048], region: "Asia" },
+    { name: "Seoul", coordinates: [126.978, 37.5665], region: "Asia" },
+    { name: "Sydney", coordinates: [151.2093, -33.8688], region: "Oceania" }
   ];
-  state.feedEvents = [...initialFeed];
-  state.allFeedEvents = [...initialFeed];
-  state.alertsList = [...initialAlerts];
 
-  // Render everything
-  renderMap('map-svg', $('map-container'));
-  renderFeed('intel-feed-list', state.feedEvents, 6);
-  renderChart();
-  renderAssets('shadow-asset-list');
-  renderAlerts();
-  updateNodeSidebar(CITIES[0]);
+  const THREAT_TYPES = ["DDoS Attack","Ransomware","Phishing Campaign","Brute Force","SQL Injection","Zero-Day Exploit","Malware Detected","Port Scan","Botnet C2","Credential Stuffing","Data Exfiltration","APT Activity"];
+  const SEVERITY_COLORS = { critical: "#ff3355", high: "#ff6644", medium: "#ffaa22", low: "#44ddcc" };
+  const SEVERITY_LEVELS = ["critical","high","medium","low"];
+  const ACTION_VERBS = ["BLOCKED","INTERCEPTED","NULLIFIED","QUARANTINED","DROPPED"];
+  const PORTS = ["443","80","22","3389","53","21","8080"];
 
-  // Nav tabs
-  document.querySelectorAll('.nav-tab').forEach(tab => {
-    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
-    tab.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();switchTab(tab.dataset.tab);} });
-  });
+  // === GLOBAL STATE ===
+  let arcs = [];
+  let arcId = 0;
+  let mapStats = { incoming: 0, internal: 0, blocked: 0 };
+  let feedEvents = [];
+  let mapTime = 0;
+  let lastSpawn = 0;
+  let worldLandFeature = null;
 
-  // GRC button
-  $('btn-grc-report')?.addEventListener('click', () => {
-    addFeedEvent('info', 'GRC report generation initiated — Kenya DPA 2019 compliance scan');
-    switchTab('grc-reports');
-    setTimeout(() => {
-      const nr = {title:`Kenya DPA 2019 — Audit ${new Date().toISOString().split('T')[0]}`,status:'COMPLIANT',score:`${randInt(82,95)}%`,date:new Date().toISOString().split('T')[0]};
-      state.reports.unshift(nr);
-      state.selectedReport = 0;
-      renderReports();
-      renderReportPreview(0);
-      addFeedEvent('info', `GRC report generated — ${nr.title}, score: ${nr.score}`);
+  // === HELPERS ===
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const hexToRGB = c => [parseInt(c.slice(1,3),16), parseInt(c.slice(3,5),16), parseInt(c.slice(5,7),16)];
+  const ts = () => { const d = new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}.${String(d.getMilliseconds()).padStart(3,'0')}`; };
+
+  // === THREAT MAP ENGINE ===
+  function spawnArc() {
+    const africanIdx = CITIES.map((c,i) => (c.region==="East Africa" || c.region==="Africa") ? i : -1).filter(i => i !== -1);
+    const toIdx = africanIdx[Math.floor(Math.random() * africanIdx.length)];
+    let fromIdx = Math.floor(Math.random() * CITIES.length);
+    while (fromIdx === toIdx) fromIdx = Math.floor(Math.random() * CITIES.length);
+
+    const isIncoming = CITIES[fromIdx].region !== "East Africa" && CITIES[fromIdx].region !== "Africa";
+    const sevIdx = Math.random() < 0.15 ? 0 : Math.random() < 0.35 ? 1 : Math.random() < 0.7 ? 2 : 3;
+    const severity = SEVERITY_LEVELS[sevIdx];
+
+    const arc = {
+      from: CITIES[fromIdx], to: CITIES[toIdx], progress: 0,
+      speed: 0.003 + Math.random() * 0.006, severity, color: SEVERITY_COLORS[severity],
+      threatType: pick(THREAT_TYPES), isIncoming, id: arcId++
+    };
+    arcs.push(arc);
+
+    // Update counters
+    if (isIncoming) mapStats.incoming++; else mapStats.internal++;
+    if (Math.random() > 0.2) mapStats.blocked++;
+    document.getElementById('cnt-incoming').textContent = mapStats.incoming;
+    document.getElementById('cnt-local').textContent = mapStats.internal;
+    document.getElementById('cnt-blocked').textContent = mapStats.blocked;
+
+    // Feed event
+    const evt = { from: CITIES[fromIdx].name, to: CITIES[toIdx].name, type: arc.threatType, severity, isIncoming };
+    feedEvents.unshift(evt);
+    if (feedEvents.length > 8) feedEvents.length = 8;
+    renderFeed();
+  }
+
+  function renderFeed() {
+    const list = document.getElementById('feed-list');
+    list.innerHTML = feedEvents.map((e, i) => {
+      const [r,g,b] = hexToRGB(SEVERITY_COLORS[e.severity]);
+      const dir = e.isIncoming ? '<span style="color:#ff5555">IN ▼</span>' : '<span style="color:#ffc832">LOCAL ~</span>';
+      return `<div class="feed-item" style="opacity:${1 - i*0.1}">
+        <div class="feed-item-left"><div class="feed-dot" style="background:rgb(${r},${g},${b});box-shadow:0 0 5px rgb(${r},${g},${b})"></div><span style="color:rgba(255,255,255,0.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">${e.type}</span></div>
+        <div class="feed-item-right">${dir} ${e.from.substring(0,3).toUpperCase()} → ${e.to.substring(0,3).toUpperCase()}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function initThreatMap(worldData) {
+    const land = topojson.feature(worldData, worldData.objects.land);
+    worldLandFeature = land;
+    const canvas = document.getElementById('threat-canvas');
+    const container = document.getElementById('map-container');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      const rect = container.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+    }
+    resize();
+    new ResizeObserver(resize).observe(container);
+
+    // Initial burst
+    for (let i = 0; i < 8; i++) setTimeout(spawnArc, i * 150);
+
+    function animate() {
+      const rect = container.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      const dpr = window.devicePixelRatio || 1;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.scale(dpr, dpr);
+
+      const projection = d3.geoEquirectangular().fitExtent([[0,20],[w,h-20]], worldLandFeature);
+      const pathGen = d3.geoPath(projection, ctx);
+
+      // 1. Draw land
+      ctx.beginPath(); pathGen(worldLandFeature);
+      ctx.fillStyle = 'rgba(40,10,15,0.4)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,50,50,0.3)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      // 2. Scan radar
+      const scanX = (mapTime * 180) % (w * 1.5) - (w * 0.25);
+      const grad = ctx.createLinearGradient(scanX-100, 0, scanX, 0);
+      grad.addColorStop(0, 'rgba(255,50,50,0)');
+      grad.addColorStop(0.9, 'rgba(255,50,50,0.05)');
+      grad.addColorStop(1, 'rgba(255,50,50,0.3)');
+      ctx.fillStyle = grad; ctx.fillRect(scanX-100, 0, 100, h);
+      ctx.beginPath(); ctx.moveTo(scanX,0); ctx.lineTo(scanX,h);
+      ctx.strokeStyle = 'rgba(255,50,50,0.6)'; ctx.lineWidth = 1; ctx.stroke();
+
+      // 3. Cities
+      const activeCities = new Set();
+      arcs.forEach(a => { if (a.progress < 0.95) { activeCities.add(a.from.name); activeCities.add(a.to.name); } });
+
+      CITIES.forEach(city => {
+        const coords = projection(city.coordinates);
+        if (!coords) return;
+        const [x,y] = coords;
+        const isEA = city.region === 'East Africa';
+        const isActive = activeCities.has(city.name);
+        const pulse = Math.sin(mapTime * 4 + x) * 0.5 + 0.5;
+
+        ctx.beginPath();
+        const r = isEA ? (2.5 + pulse*1.5) : (isActive ? 2 : 1);
+        ctx.arc(x, y, r, 0, Math.PI*2);
+        ctx.fillStyle = isEA ? `rgba(255,200,50,${0.7+pulse*0.3})` : isActive ? `rgba(255,100,100,${0.5+pulse*0.5})` : 'rgba(255,50,50,0.2)';
+        ctx.fill();
+
+        if (isActive || isEA) {
+          ctx.beginPath();
+          ctx.arc(x, y, (isEA?6:3) + pulse*(isEA?10:6), 0, Math.PI*2);
+          ctx.strokeStyle = isEA ? `rgba(255,200,50,${0.6-pulse*0.6})` : `rgba(255,100,100,${0.8-pulse*0.8})`;
+          ctx.stroke();
+        }
+        if (isEA || isActive) {
+          ctx.font = isEA ? "bold 11px 'JetBrains Mono',monospace" : "bold 9px 'JetBrains Mono',monospace";
+          ctx.fillStyle = isEA ? 'rgba(255,200,50,1)' : 'rgba(255,100,100,0.9)';
+          ctx.textAlign = 'left';
+          ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+6,y-6);
+          ctx.strokeStyle = isEA ? 'rgba(255,200,50,0.8)' : 'rgba(255,100,100,0.6)'; ctx.stroke();
+          ctx.fillText(city.name, x+8, y-6);
+        }
+      });
+
+      // 4. Arcs
+      arcs.forEach(arc => {
+        const fc = projection(arc.from.coordinates), tc = projection(arc.to.coordinates);
+        if (!fc || !tc) return;
+        const [x1,y1] = fc, [x2,y2] = tc;
+        const midX=(x1+x2)/2, midY=(y1+y2)/2;
+        const dist = Math.sqrt((x2-x1)**2+(y2-y1)**2);
+        const cpX=midX, cpY=midY - dist*0.25;
+        const [cr,cg,cb] = hexToRGB(arc.color);
+
+        // Trail
+        const tLen=0.2, tStart=Math.max(0,arc.progress-tLen), steps=30;
+        for (let i=0;i<steps;i++) {
+          const t1=tStart+(arc.progress-tStart)*(i/steps);
+          const t2=tStart+(arc.progress-tStart)*((i+1)/steps);
+          const px1=(1-t1)**2*x1+2*(1-t1)*t1*cpX+t1**2*x2;
+          const py1=(1-t1)**2*y1+2*(1-t1)*t1*cpY+t1**2*y2;
+          const px2=(1-t2)**2*x1+2*(1-t2)*t2*cpX+t2**2*x2;
+          const py2=(1-t2)**2*y1+2*(1-t2)*t2*cpY+t2**2*y2;
+          const alpha=(i/steps)*(1-(arc.progress>0.8?(arc.progress-0.8)*5:0));
+          if (alpha > 0) {
+            ctx.beginPath(); ctx.moveTo(px1,py1); ctx.lineTo(px2,py2);
+            ctx.strokeStyle=`rgba(${cr},${cg},${cb},${alpha})`; ctx.lineWidth=1.5; ctx.stroke();
+          }
+        }
+        // Head
+        if (arc.progress < 0.99) {
+          const hx=(1-arc.progress)**2*x1+2*(1-arc.progress)*arc.progress*cpX+arc.progress**2*x2;
+          const hy=(1-arc.progress)**2*y1+2*(1-arc.progress)*arc.progress*cpY+arc.progress**2*y2;
+          ctx.beginPath(); ctx.arc(hx,hy,2.5,0,Math.PI*2);
+          ctx.fillStyle=`rgba(${cr},${cg},${cb},1)`; ctx.fill();
+        }
+        // Impact flash
+        if (arc.progress >= 0.96) {
+          const fp=clamp((arc.progress-0.96)/0.05,0,1);
+          const fs=Math.max(0,(1-fp)*25), fa=Math.max(0,(1-fp)*0.5);
+          ctx.beginPath(); ctx.arc(x2,y2,fs,0,Math.PI*2);
+          ctx.fillStyle=`rgba(${cr},${cg},${cb},${fa})`; ctx.fill();
+        }
+      });
+
+      ctx.restore();
+
+      // Update arcs
+      arcs.forEach(a => { a.progress += a.speed; });
+      arcs = arcs.filter(a => a.progress < 1.05);
+
+      // Spawn
+      mapTime += 0.016;
+      let rate = 0.2 + Math.random()*0.4;
+      if (Math.random() < 0.05) rate = 0.05;
+      if (mapTime - lastSpawn > rate) { spawnArc(); lastSpawn = mapTime; }
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+  // === TERMINAL FEED ENGINE ===
+  let logId = 0;
+  function generateLog() {
+    const city = pick(CITIES), threat = pick(THREAT_TYPES), action = pick(ACTION_VERBS), port = pick(PORTS);
+    const ip = `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.XXX`;
+    const isCritical = Math.random() < 0.1;
+    return { id: logId++, timestamp: ts(), type: isCritical ? 'CRITICAL' : 'WARN',
+      message: `[${action}] ${threat} from ${ip} targeting ${city.name} on Port ${port}` };
+  }
+
+  function initTerminal() {
+    const body = document.getElementById('terminal-body');
+    const logs = [];
+    for (let i = 0; i < 10; i++) logs.push(generateLog());
+
+    function render() {
+      body.innerHTML = logs.map(l =>
+        `<div class="log-entry"><span class="log-ts">[${l.timestamp}]</span><span class="${l.type==='CRITICAL'?'log-critical':'log-warn'}">[${l.type}]</span><span class="log-msg">${l.message}</span></div>`
+      ).join('');
+      body.scrollTop = body.scrollHeight;
+    }
+    render();
+
+    setInterval(() => {
+      if (Math.random() > 0.3) {
+        logs.push(generateLog());
+        if (logs.length > 40) logs.shift();
+        render();
+      }
+    }, 400);
+  }
+
+  // === ACTIVE INTERCEPT ENGINE ===
+  function initIntercept() {
+    const body = document.getElementById('intercept-body');
+    const standby = document.getElementById('intercept-standby');
+    const badge = document.getElementById('secured-badge');
+    let activeEl = null;
+
+    function triggerIntercept() {
+      const threat = pick(THREAT_TYPES);
+      const target = CITIES[Math.floor(Math.random()*4)].name;
+      const ip = `${Math.floor(10+Math.random()*200)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+      const hash = Array.from({length:16},()=>Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+      const id = `AX-${Math.floor(Math.random()*9999)}`;
+
+      standby.style.display = 'none';
+      badge.style.display = 'none';
+
+      const div = document.createElement('div');
+      div.className = 'intercept-active';
+      div.id = 'intercept-live';
+      div.innerHTML = `
+        <div class="intercept-status scanning" id="i-status">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" id="i-shield" style="animation:pulse 1s infinite"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div><h2 id="i-status-text">SCANNING</h2><p class="iid">ID: ${id}</p></div>
+        </div>
+        <div class="intercept-grid">
+          <div class="intercept-cell"><div class="intercept-cell-label">SOURCE ORIGIN</div><div class="intercept-cell-value">${ip}</div></div>
+          <div class="intercept-cell"><div class="intercept-cell-label">TARGET NODE</div><div class="intercept-cell-value" style="font-weight:700">${target}</div></div>
+          <div class="intercept-cell span2"><div class="intercept-cell-label">THREAT VECTOR</div><div class="intercept-cell-value" style="color:#ff5555;font-weight:700">${threat}</div></div>
+          <div class="intercept-cell span2" style="display:flex;justify-content:space-between;align-items:center"><div><div class="intercept-cell-label">PAYLOAD SIGNATURE</div><div class="intercept-cell-value" style="font-size:10px;opacity:0.8">0x${hash}</div></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5" opacity="0.5"><path d="M12 10a2 2 0 0 0-2 2c0 1.1.9 2 2 2a2 2 0 0 0 2-2 2 2 0 0 0-2-2z"/><path d="M19.07 4.93A10 10 0 0 0 4.93 19.07 10 10 0 0 0 19.07 4.93zM12 2v4m0 12v4M2 12h4m12 0h4"/></svg></div>
+        </div>
+        <div class="intercept-progress"><div class="intercept-progress-label"><span id="i-prog-label">ANALYSIS IN PROGRESS</span><span id="i-prog-pct">0%</span></div><div class="intercept-bar"><div class="intercept-bar-fill" id="i-bar" style="width:0%;background:#ef4444"></div></div></div>`;
+      if (activeEl) body.removeChild(activeEl);
+      body.appendChild(div);
+      activeEl = div;
+
+      let prog = 0;
+      const progInt = setInterval(() => {
+        prog = Math.min(100, prog + 2);
+        document.getElementById('i-bar').style.width = prog + '%';
+        document.getElementById('i-prog-pct').textContent = prog + '%';
+        if (prog >= 100) clearInterval(progInt);
+      }, 50);
+
+      setTimeout(() => {
+        const s = document.getElementById('i-status');
+        const t = document.getElementById('i-status-text');
+        if (s && t) { s.className = 'intercept-status analyzing'; t.textContent = 'ANALYZING'; }
+      }, 1500);
+
+      setTimeout(() => {
+        const s = document.getElementById('i-status');
+        const t = document.getElementById('i-status-text');
+        const sh = document.getElementById('i-shield');
+        const bar = document.getElementById('i-bar');
+        const lbl = document.getElementById('i-prog-label');
+        if (s) s.className = 'intercept-status neutralized';
+        if (t) t.textContent = 'NEUTRALIZED';
+        if (sh) sh.style.animation = 'none';
+        if (bar) bar.style.background = '#10b981';
+        if (lbl) lbl.textContent = 'ACTION COMPLETE';
+        badge.style.display = '';
+
+        // Stamp
+        const stamp = document.createElement('div');
+        stamp.className = 'blocked-stamp';
+        stamp.innerHTML = '<div class="blocked-stamp-inner"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>BLOCKED</div>';
+        body.appendChild(stamp);
+        setTimeout(() => { if (stamp.parentNode) stamp.parentNode.removeChild(stamp); }, 4000);
+      }, 3000);
+
+      setTimeout(() => {
+        if (activeEl && activeEl.parentNode) { body.removeChild(activeEl); activeEl = null; }
+        standby.style.display = ''; badge.style.display = 'none';
+      }, 7000);
+    }
+
+    setTimeout(triggerIntercept, 3000);
+    function loop() { setTimeout(() => { triggerIntercept(); loop(); }, 12000 + Math.random()*13000); }
+    loop();
+  }
+
+  // === NODE HEALTH ENGINE ===
+  function initNodeHealth() {
+    const grid = document.getElementById('nodes-grid');
+    const nodes = [
+      { id:'nbo-1', name:'Nairobi Core', cpu:45, net:60, status:'ONLINE', ping:12 },
+      { id:'dar-1', name:'Dar es Salaam', cpu:32, net:40, status:'ONLINE', ping:45 },
+      { id:'kgl-1', name:'Kigali Gateway', cpu:28, net:35, status:'ONLINE', ping:22 },
+      { id:'kmp-1', name:'Kampala Relay', cpu:55, net:70, status:'WARN', ping:38 }
+    ];
+
+    function barColor(v) { return v > 85 ? 'bar-red' : v > 65 ? 'bar-amber' : 'bar-green'; }
+    function statusClass(s) { return s==='CRITICAL'?'status-critical':s==='WARN'?'status-warn':'status-online'; }
+
+    function render() {
+      grid.innerHTML = nodes.map(n => `
+        <div class="node-card" id="node-${n.id}">
+          ${n.status==='CRITICAL'?'<div class="node-critical-glow"></div>':''}
+          <div class="node-card-header">
+            <div><div class="node-name">${n.name}</div><div class="node-ping">PING: ${Math.round(n.ping)}ms</div></div>
+            <div class="node-status ${statusClass(n.status)}">${n.status}</div>
+          </div>
+          <div class="node-metrics">
+            <div><div class="metric-header"><span class="metric-label">CPU LOAD</span><span class="metric-value" id="cpu-${n.id}">${n.cpu.toFixed(1)}%</span></div><div class="metric-bar"><div class="metric-bar-fill ${barColor(n.cpu)}" id="cpubar-${n.id}" style="width:${n.cpu}%"></div></div></div>
+            <div><div class="metric-header"><span class="metric-label">NET TRAFFIC</span><span class="metric-value" id="net-${n.id}">${n.net.toFixed(1)}%</span></div><div class="metric-bar"><div class="metric-bar-fill ${barColor(n.net)}" id="netbar-${n.id}" style="width:${n.net}%"></div></div></div>
+          </div>
+        </div>`).join('');
+    }
+    render();
+
+    setInterval(() => {
+      nodes.forEach(n => {
+        n.cpu = clamp(n.cpu + (Math.random()-0.5)*15, 10, 98);
+        n.net = clamp(n.net + (Math.random()-0.5)*20, 10, 99);
+        if (Math.random() < 0.05) { n.cpu = 85+Math.random()*14; n.net = 90+Math.random()*9; }
+        n.ping = Math.max(5, n.ping + (Math.random()-0.5)*4);
+        n.status = (n.cpu>90||n.net>95)?'CRITICAL':(n.cpu>70||n.net>80)?'WARN':'ONLINE';
+
+        // DOM update
+        const cpuEl = document.getElementById('cpu-'+n.id);
+        const netEl = document.getElementById('net-'+n.id);
+        const cpuBar = document.getElementById('cpubar-'+n.id);
+        const netBar = document.getElementById('netbar-'+n.id);
+        if (cpuEl) cpuEl.textContent = n.cpu.toFixed(1)+'%';
+        if (netEl) netEl.textContent = n.net.toFixed(1)+'%';
+        if (cpuBar) { cpuBar.style.width = n.cpu+'%'; cpuBar.className = 'metric-bar-fill '+barColor(n.cpu); }
+        if (netBar) { netBar.style.width = n.net+'%'; netBar.className = 'metric-bar-fill '+barColor(n.net); }
+
+        const card = document.getElementById('node-'+n.id);
+        if (card) {
+          const statusEl = card.querySelector('.node-status');
+          if (statusEl) { statusEl.textContent = n.status; statusEl.className = 'node-status '+statusClass(n.status); }
+          const pingEl = card.querySelector('.node-ping');
+          if (pingEl) pingEl.textContent = 'PING: '+Math.round(n.ping)+'ms';
+          const glow = card.querySelector('.node-critical-glow');
+          if (n.status==='CRITICAL' && !glow) { const g=document.createElement('div'); g.className='node-critical-glow'; card.prepend(g); }
+          else if (n.status!=='CRITICAL' && glow) glow.remove();
+        }
+      });
     }, 1500);
-  });
+  }
 
-  // Generate report button
-  $('btn-gen-report')?.addEventListener('click', () => {
-    const btn = $('btn-gen-report');
-    btn.innerHTML = '<span class="loading"></span> GENERATING...';
-    btn.disabled = true;
-    setTimeout(() => {
-      const nr = {title:`Security Assessment — ${new Date().toISOString().split('T')[0]}`,status:'IN PROGRESS',score:`${randInt(70,90)}%`,date:new Date().toISOString().split('T')[0]};
-      state.reports.unshift(nr);
-      state.selectedReport = 0;
-      renderReports();
-      renderReportPreview(0);
-      btn.innerHTML = 'GENERATE NEW REPORT';
-      btn.disabled = false;
-      addFeedEvent('info', `New report generated — ${nr.title}`);
+  // === TELEMETRY GRAPH ENGINE ===
+  function initTelemetry() {
+    const canvas = document.getElementById('telemetry-canvas');
+    const container = canvas.parentElement;
+    const ctx = canvas.getContext('2d');
+
+    const data = [];
+    const now = new Date();
+    for (let i=24; i>=0; i--) {
+      const d = new Date(now.getTime() - i*3600000);
+      const base = 500 + Math.sin(i/3)*300 + Math.random()*200;
+      data.push({ time: String(d.getHours()).padStart(2,'0')+':00', threats: Math.floor(base), blocked: Math.floor(base*(0.8+Math.random()*0.15)) });
+    }
+
+    function resize() {
+      const rect = container.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      canvas.style.width = rect.width+'px';
+      canvas.style.height = rect.height+'px';
+    }
+    resize();
+    new ResizeObserver(resize).observe(container);
+
+    function draw() {
+      const rect = container.getBoundingClientRect();
+      const w = rect.width, h = rect.height;
+      const dpr = window.devicePixelRatio || 1;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.save(); ctx.scale(dpr,dpr);
+
+      const pad = { top:10, right:10, bottom:30, left:50 };
+      const cw = w-pad.left-pad.right, ch = h-pad.top-pad.bottom;
+      const maxVal = Math.max(...data.map(d=>Math.max(d.threats,d.blocked))) * 1.1;
+
+      // X axis
+      ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(pad.left,h-pad.bottom); ctx.lineTo(w-pad.right,h-pad.bottom); ctx.stroke();
+
+      // Y labels + grid
+      ctx.font = "9px 'JetBrains Mono',monospace"; ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.textAlign='right';
+      for (let i=0;i<=4;i++) {
+        const val = Math.round(maxVal*i/4);
+        const y = h-pad.bottom - (i/4)*ch;
+        ctx.fillText(val, pad.left-8, y+3);
+        if (i>0) { ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(w-pad.right,y); ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.stroke(); }
+      }
+
+      // X labels
+      ctx.textAlign='center'; ctx.fillStyle='rgba(255,255,255,0.3)';
+      data.forEach((d,i) => { if (i%4===0) { const x=pad.left+(i/(data.length-1))*cw; ctx.fillText(d.time,x,h-pad.bottom+18); } });
+
+      // Area helpers
+      function drawArea(key, strokeColor, fillTop, fillBot) {
+        const pts = data.map((d,i) => ({ x:pad.left+(i/(data.length-1))*cw, y:h-pad.bottom-(d[key]/maxVal)*ch }));
+        // Fill
+        const grad = ctx.createLinearGradient(0,pad.top,0,h-pad.bottom);
+        grad.addColorStop(0, fillTop); grad.addColorStop(1, fillBot);
+        ctx.beginPath(); ctx.moveTo(pts[0].x,h-pad.bottom);
+        pts.forEach(p => ctx.lineTo(p.x,p.y));
+        ctx.lineTo(pts[pts.length-1].x,h-pad.bottom); ctx.closePath();
+        ctx.fillStyle=grad; ctx.fill();
+        // Stroke
+        ctx.beginPath(); pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+        ctx.strokeStyle=strokeColor; ctx.lineWidth=2; ctx.stroke();
+      }
+      drawArea('threats','#f59e0b','rgba(245,158,11,0.3)','rgba(245,158,11,0)');
+      drawArea('blocked','#ef4444','rgba(239,68,68,0.3)','rgba(239,68,68,0)');
+
+      ctx.restore();
+    }
+    draw();
+
+    // Tooltip
+    canvas.addEventListener('mousemove', e => {
+      const rect = container.getBoundingClientRect();
+      draw();
+      const mx = e.clientX - rect.left;
+      const pad = { left:50, right:10, bottom:30, top:10 };
+      const cw = rect.width-pad.left-pad.right;
+      const idx = Math.round(((mx-pad.left)/cw)*(data.length-1));
+      if (idx>=0 && idx<data.length) {
+        const dpr = window.devicePixelRatio||1;
+        const x = pad.left+(idx/(data.length-1))*cw;
+        const ch = rect.height-pad.top-pad.bottom;
+        const maxVal = Math.max(...data.map(d=>Math.max(d.threats,d.blocked)))*1.1;
+        ctx.save(); ctx.scale(dpr,dpr);
+        ctx.beginPath(); ctx.moveTo(x,pad.top); ctx.lineTo(x,rect.height-pad.bottom);
+        ctx.strokeStyle='rgba(255,50,50,0.3)'; ctx.lineWidth=1; ctx.stroke();
+        // Popup
+        ctx.fillStyle='rgba(20,10,10,0.9)'; ctx.strokeStyle='rgba(255,50,50,0.3)'; ctx.lineWidth=1;
+        const bx=x+10,by=30,bw=130,bh=50;
+        ctx.beginPath(); ctx.roundRect(bx,by,bw,bh,6); ctx.fill(); ctx.stroke();
+        ctx.font="bold 9px 'JetBrains Mono',monospace"; ctx.fillStyle='#fff'; ctx.textAlign='left';
+        ctx.fillText(data[idx].time, bx+8, by+14);
+        ctx.fillStyle='#f59e0b'; ctx.fillText('Scans: '+data[idx].threats, bx+8, by+28);
+        ctx.fillStyle='#ef4444'; ctx.fillText('Blocked: '+data[idx].blocked, bx+8, by+42);
+        ctx.restore();
+      }
+    });
+
+    // Live update
+    setInterval(() => {
+      const last = data[data.length-1];
+      const j = (Math.random()-0.5)*50;
+      last.threats = Math.max(0, last.threats + j);
+      last.blocked = Math.max(0, last.blocked + j*0.9);
+      draw();
     }, 2000);
-  });
+  }
 
-  // Deploy asset
-  $('btn-deploy')?.addEventListener('click', () => {
-    const type = $('deploy-type').value;
-    const loc = $('deploy-location').value;
-    const desc = $('deploy-desc').value || `${type} at ${loc}`;
-    const port = $('deploy-port').value || ':8080';
-    const id = `${type.substring(0,2).toUpperCase()}-${String(randInt(10,99))}`;
-    const typeKey = type.toLowerCase();
-    const colors = typeKey==='honeypot'?{bg:'#091a0f',border:'#0f6e56',color:COLORS.GREEN}:typeKey==='sinkhole'?{bg:'#091424',border:'#185fa5',color:COLORS.MEDIUM}:{bg:'#170e22',border:COLORS.PURPLE,color:COLORS.PURPLE};
-    state.deployedAssets.push({id:`asset-${id}`,type:typeKey,name:`${type} ${id}`,detail:`${loc} — ${desc} · ${port}`,iconBg:colors.bg,iconBorder:colors.border,iconColor:colors.color});
-    addFeedEvent('info', `New ${type} ${id} deployed at ${loc} — ${desc}`);
-    renderAssets('expanded-asset-list');
-    updateShadowMetric();
-    $('deploy-desc').value = '';
-    $('deploy-port').value = '';
-  });
+  // === COUNT-UP ANIMATIONS ===
+  function countUp(elId, target, duration, decimal) {
+    const el = document.getElementById(elId);
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        observer.disconnect();
+        const start = performance.now();
+        function step(now) {
+          const p = Math.min((now-start)/duration, 1);
+          const eased = 1 - Math.pow(1-p, 3);
+          const val = eased * target;
+          el.textContent = decimal ? (val/100).toFixed(2) : Math.floor(val).toLocaleString();
+          if (p < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+      }
+    }, { threshold: 0.3 });
+    observer.observe(el);
+  }
 
-  // Modal close
-  $('modal-close')?.addEventListener('click', closeModal);
-  $('alert-modal')?.addEventListener('click', e => { if(e.target.id==='alert-modal') closeModal(); });
-  document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+  // === SCROLL REVEAL ===
+  function initScrollReveal() {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('revealed'); });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+  }
 
-  // Filter pills
-  document.querySelectorAll('.filter-pill').forEach(p => {
-    p.addEventListener('click', () => {
-      document.querySelectorAll('.filter-pill').forEach(pp => pp.classList.remove('active'));
-      p.classList.add('active');
-      renderFullFeed();
+  // === NAVBAR BEHAVIORS ===
+  function initNavbar() {
+    const nav = document.getElementById('navbar');
+    const toggle = document.getElementById('mobile-toggle');
+    const menu = document.getElementById('mobile-menu');
+    let menuOpen = false;
+
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 20);
     });
-    p.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();p.click();} });
-  });
 
-  // Feed search
-  $('feed-search')?.addEventListener('input', renderFullFeed);
-
-  // Feed scroll pause
-  const fullFeed = $('full-feed-list');
-  const scrollInd = $('scroll-indicator');
-  if(fullFeed && scrollInd) {
-    fullFeed.addEventListener('scroll', () => {
-      const atBottom = fullFeed.scrollHeight - fullFeed.scrollTop - fullFeed.clientHeight < 30;
-      state.feedPaused = !atBottom;
-      scrollInd.classList.toggle('show', state.feedPaused);
+    toggle.addEventListener('click', () => {
+      menuOpen = !menuOpen;
+      menu.classList.toggle('open', menuOpen);
+      toggle.innerHTML = menuOpen ? '&#10005;' : '&#9776;';
     });
-    scrollInd.addEventListener('click', () => {
-      fullFeed.scrollTop = 0;
-      state.feedPaused = false;
-      scrollInd.classList.remove('show');
+
+    document.querySelectorAll('.nav-link, .btn-secondary').forEach(link => {
+      link.addEventListener('click', e => {
+        const href = link.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          e.preventDefault();
+          const target = document.querySelector(href);
+          if (target) target.scrollIntoView({ behavior: 'smooth' });
+          if (menuOpen) { menuOpen = false; menu.classList.remove('open'); toggle.innerHTML = '&#9776;'; }
+        }
+      });
     });
   }
 
-  // Resize handler for maps
-  window.addEventListener('resize', () => {
-    requestAnimationFrame(() => {
-      renderMap('map-svg', $('map-container'));
-      if(state.activeTab === 'threat-map') renderMap('expanded-map-svg', $('expanded-map-container'));
+  // === INIT ===
+  initNavbar();
+  initTerminal();
+  initIntercept();
+  initNodeHealth();
+  initTelemetry();
+  initScrollReveal();
+  countUp('stat-users', 8432, 2000);
+  countUp('stat-uptime', 9997, 2500, true);
+  countUp('stat-nodes', 142, 1800);
+
+  // Load world data
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    .then(r => r.json())
+    .then(data => initThreatMap(data))
+    .catch(() => {
+      const canvas = document.getElementById('threat-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.font = "14px 'JetBrains Mono',monospace";
+      ctx.fillStyle = 'rgba(255,50,50,0.5)';
+      ctx.textAlign = 'center';
+      const rect = canvas.parentElement.getBoundingClientRect();
+      ctx.fillText('MAP DATA LOADING...', rect.width/2, rect.height/2);
     });
-  });
-
-  // Start simulations
-  startSimulations();
-}
-
-document.addEventListener('DOMContentLoaded', init);
-</script>
+  })();
+  </script>
 </body>
 </html>
